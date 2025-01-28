@@ -183,8 +183,16 @@ float	Time;					// used for animation, this has a value between 0. and 1.
 int		Xmouse, Ymouse;			// mouse values
 float	Xrot, Yrot;				// rotation angles in degrees
 
-float 	uAd, uBd, uTol;
-float 	uNoiseAmp, uNoiseFreq;	//project2
+/* 
+// help remaining from project1 
+int		SphereList;				// Help
+Keytimes Ad;
+Keytimes Bd;
+Keytimes Tol;
+*/
+
+float uAd, uBd, uTol;
+float uNoiseAmp, uNoiseFreq;
 
 int		SphereList;
 
@@ -362,6 +370,30 @@ Display( )
 
 	glEnable( GL_DEPTH_TEST );
 
+
+	/*
+	// start here  sa_modified  //help compare to below uncomment section
+
+	// turn # msec into the cycle ( 0 - MSEC-1 ):
+    int msec = glutGet( GLUT_ELAPSED_TIME )  %  MSEC;
+
+	// turn that into a time in seconds:
+	float nowTime = (float) msec / 1000;
+
+	// Pass these values to the shader
+	Pattern.SetUniformVariable("uAd", Ad.GetValue(nowTime));
+	Pattern.SetUniformVariable("uBd", Bd.GetValue(nowTime));
+	Pattern.SetUniformVariable("uTol", Tol.GetValue(nowTime));
+
+	// Render the object 
+	glCallList(SphereList);
+
+	//Swap buffers for double-buffering
+	glutSwapBuffers();
+
+	// end sa_modified
+	*/
+
 	// specify shading to be flat:
 
 	glShadeModel( GL_FLAT );
@@ -434,7 +466,19 @@ Display( )
     Pattern.SetUniformVariable( (char *)"uNoiseFreq" , uNoiseFreq  );
     Pattern.SetUniformVariable( (char *)"uNoiseAmp" , uNoiseAmp  );
 
-    Pattern.SetUniformVariable( (char *)"uNoiseTexture" , 3 );			//project2
+    Pattern.SetUniformVariable( (char *)"uNoiseTexture" , 3 );
+
+	/*
+	//help comment for project 2
+	// set the uniform variables that will change over time:
+
+	NowS0 = 0.5f;
+	NowT0 = 0.5f;
+	NowD  = 0.2f + 0.1f*sinf(2.f*F_PI*Time);
+	Pattern.SetUniformVariable( (char *)"uS0", NowS0 );
+	Pattern.SetUniformVariable( (char *)"uT0", NowT0 );
+	Pattern.SetUniformVariable( (char *)"uD" , NowD  );
+	*/
 
 	glCallList( SphereList );
 
@@ -643,7 +687,6 @@ InitMenus( )
 	glutAttachMenu( GLUT_RIGHT_BUTTON );
 }
 
-//project2
 unsigned char* ReadTexture3D(char* filename, int* width, int* height, int* depth) {
     FILE* fp = fopen(filename, "rb");
     if (fp == NULL) { return NULL; }
@@ -742,12 +785,16 @@ InitGraphics( )
 
 	glutIdleFunc( Animate );
 
-	glGenTextures(1, &NoiseTexture);		//project2
+	glGenTextures(1, &NoiseTexture);
     int nums, numt, nump;
     unsigned char* texture = ReadTexture3D("noise3d.064.tex", &nums, &numt, &nump);
     if (texture == NULL) {
         fprintf(stderr, "Couldn't load noise texture");
     }
+	if (!texture) {
+		fprintf(stderr, "Couldn't load noise texture");
+		printf("from !texture \n");
+	}
 
     glBindTexture(GL_TEXTURE_3D, NoiseTexture);
     glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -786,8 +833,37 @@ InitGraphics( )
 	Pattern.SetUniformVariable( (char *)"uKa", 0.1f );
 	Pattern.SetUniformVariable( (char *)"uKd", 0.5f );
 	Pattern.SetUniformVariable( (char *)"uKs", 0.4f );
+	//Pattern.SetUniformVariable( (char *)"uColor", 1.f, 0.5f, 0.f, 1.f );  //help
+	//Pattern.SetUniformVariable( (char *)"uSpecularColor", 1.f, 1.f, 1.f, 1.f );
 	Pattern.SetUniformVariable( (char *)"uShininess", 12.f );
 	Pattern.UnUse( );
+
+	/*
+	//help remaining from project1
+	// Initialize Keytime values for uAd
+	Ad.Init();
+	Ad.AddTimeValue(0.0, 0.2); // Start small
+	Ad.AddTimeValue(2.0, 0.3); // Grow
+	Ad.AddTimeValue(5.0, 0.5); // Peak
+	Ad.AddTimeValue(8.0, 0.3); // Shrink
+	Ad.AddTimeValue(10.0, 0.2); //Return to start
+
+	// Initialize Keytime values for uBd
+	Bd.Init();
+	Bd.AddTimeValue(0.0, 0.3);
+	Bd.AddTimeValue(2.0, 0.4); 
+	Bd.AddTimeValue(5.0, 0.6); 
+	Bd.AddTimeValue(8.0, 0.4); 
+	Bd.AddTimeValue(10.0, 0.3); 
+
+	// Initialize Keytime values for uTol
+	Tol.Init();
+	Tol.AddTimeValue(0.0, 0.05);
+	Tol.AddTimeValue(2.0, 0.07); 
+	Tol.AddTimeValue(5.0, 0.1); 
+	Tol.AddTimeValue(8.0, 0.07); 
+	Tol.AddTimeValue(10.0, 0.05); 
+	*/
 }
 
 
@@ -885,7 +961,7 @@ Keyboard( unsigned char c, int x, int y )
             }
             break;
 
-        case 'f':						//project2
+        case 'f':
             if (uNoiseFreq >= 0.05) {
                 uNoiseFreq -= 0.01;
             }
