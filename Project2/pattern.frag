@@ -6,6 +6,10 @@ uniform float   uShininess;	 // specular exponent
 uniform float	uAd, uBd;
 uniform float	uTol;
 
+uniform sampler3D uNoiseTexture;
+
+uniform float uNoiseFreq, uNoiseAmp;
+
 // in variables from the vertex shader and interpolated in the rasterizer:
 varying  vec3  vN;		   // normal vector
 varying  vec3  vL;		   // vector from point to light
@@ -21,6 +25,12 @@ void main() {
   	vec3 myColor = OBJECTCOLOR;
 	vec2 st = vST;
 
+	vec4 nv = texture3D(uNoiseTexture, uNoiseFreq *  vMC );
+    float n = nv.r + nv.g + nv.b + nv.a;
+    n = n - 2.;
+    n *= uNoiseAmp;
+
+
 	// blend OBJECTCOLOR and ELLIPSECOLOR by using the ellipse equation to decide how close
 	// 	this fragment is to the ellipse border:
 
@@ -32,6 +42,17 @@ void main() {
 
 	float Sc = (float(numins) * uAd) + Ar;
 	float Tc = (float(numint) * uBd) + Br;
+
+	float ds = st.s - Sc;
+    float dt = st.t - Tc;
+    float oldDist = sqrt((ds * ds) + (dt * dt));
+    float newDist = oldDist + n;
+    float scale = newDist / oldDist;
+
+    ds *= scale;
+    ds /= Ar;
+    dt *= scale;
+    dt /= Br;
 
 	float elipse_result = pow((st.s - Sc) / Ar, 2.) + pow((st.t - Tc) / Br, 2.);
 
