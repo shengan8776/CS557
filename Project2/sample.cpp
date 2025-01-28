@@ -963,23 +963,23 @@ Keyboard( unsigned char c, int x, int y )
 
         case 'f':
             if (uNoiseFreq >= 0.05) {
-                uNoiseFreq -= 0.1;
+                uNoiseFreq -= 0.01;
             }
             break;
         case 'F':
             if (uNoiseFreq <= 1.95) {
-                uNoiseFreq += 0.1;
+                uNoiseFreq += 0.01;
             }
             break;
 
         case 's':
             if (uNoiseAmp >= 0.05) {
-                uNoiseAmp -= 0.5;
+                uNoiseAmp -= 0.05;
             }
             break;
         case 'S':
             if (uNoiseAmp <= 0.95) {
-                uNoiseAmp += 0.5;
+                uNoiseAmp += 0.05;
             }
             break;
 		
