@@ -2,8 +2,8 @@
 .vs/
 Debug/
 sample
-./manual_git/
-./hw-files/
+manual_git/
+hw-files/
 
 # GLSL logs
 .glsllog
