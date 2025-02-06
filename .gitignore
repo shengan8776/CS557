@@ -4,6 +4,8 @@ Debug/
 sample
 manual_git/
 hw-files/
+qnt/
+turn-in_files/
 
 # GLSL logs
 .glsllog
