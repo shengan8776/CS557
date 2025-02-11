@@ -183,10 +183,18 @@ float	Time;					// used for animation, this has a value between 0. and 1.
 int		Xmouse, Ymouse;			// mouse values
 float	Xrot, Yrot;				// rotation angles in degrees
 
-float	uA, uP;					//project3
+float	uMix, uEta, uWhiteMix;					//project4
 float 	uNoiseAmp, uNoiseFreq;
 
-int		SheetList;
+GLuint	DeerList, CubeName;
+char * FaceFiles[6] = {
+    (char *)"nvposx.bmp",
+    (char *)"nvnegx.bmp",
+    (char *)"nvposy.bmp",
+    (char *)"nvnegy.bmp",
+    (char *)"nvposz.bmp",
+    (char *)"nvnegz.bmp"
+};
 
 // a defined value:
 const int MSEC = 10000;         // 10000 milliseconds = 10 seconds
@@ -271,8 +279,8 @@ MulArray3(float factor, float a, float b, float c )
 #include "osusphere.cpp"
 //#include "osucone.cpp"
 //#include "osutorus.cpp"
-//#include "bmptotexture.cpp"
-//#include "loadobjfile.cpp"
+#include "bmptotexture.cpp"		//project4
+#include "loadobjfile.cpp"
 #include "keytime.cpp"
 #include "glslprogram.cpp"
 
@@ -423,19 +431,31 @@ Display( )
 	glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_3D, NoiseTexture);
 
+	int ReflectUnit = 5;
+    int RefractUnit = 6;
+
 	Pattern.Use( );
+
+	//project4
+	glActiveTexture( GL_TEXTURE0 + ReflectUnit );
+	glBindTexture( GL_TEXTURE_CUBE_MAP, CubeName );
+	glActiveTexture( GL_TEXTURE0 + RefractUnit );
+	glBindTexture( GL_TEXTURE_CUBE_MAP, CubeName );
 
 	// set the uniform variables that will change over time:
 
-    Pattern.SetUniformVariable( (char *)"uA" , uP  );
-    Pattern.SetUniformVariable( (char *)"uP" , uA  );
+    Pattern.SetUniformVariable( (char *)"uMix" , uMix  );		//project4
+    Pattern.SetUniformVariable( (char *)"uEta" , uEta  );
 
 	Pattern.SetUniformVariable( (char *)"uNoiseAmp" , uNoiseAmp  );		//project3
     Pattern.SetUniformVariable( (char *)"uNoiseFreq" , uNoiseFreq  );
 
+	Pattern.SetUniformVariable( (char *)"uReflectUnit", ReflectUnit );	//project4
+	Pattern.SetUniformVariable( (char *)"uRefractUnit", RefractUnit );
+
     Pattern.SetUniformVariable( (char *)"uNoiseTexture" , 3  );
 
-    glCallList(SheetList);
+	glCallList(DeerList);
 
 	Pattern.UnUse( );       // Pattern.Use(0);  also works
 
@@ -759,6 +779,27 @@ InitGraphics( )
     glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, nums, numt, nump, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, texture);
+	
+	//project4
+	glGenTextures( 1, &CubeName );					
+    glBindTexture( GL_TEXTURE_CUBE_MAP, CubeName );
+    glTexParameterf( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    glTexParameterf( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    glTexParameterf( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_REPEAT );
+    glTexParameterf( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameterf( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    for( int file = 0; file < 6; file++ )
+    {
+        int nums, numt;
+        unsigned char * texture2d = BmpToTexture( FaceFiles[file], &nums, &numt );
+        if( texture2d == NULL )
+            fprintf( stderr, "Could not open BMP 2D texture '%s'", FaceFiles[file] );
+        else
+            fprintf( stderr, "BMP 2D texture '%s' read -- nums = %d, numt = %d\n", FaceFiles[file], nums, numt );
+        glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + file, 0, 3, nums, numt, 0,
+                     GL_RGB, GL_UNSIGNED_BYTE, texture2d );
+        delete [ ] texture2d;
+    }
 
 #ifdef WIN32
 	GLenum err = glewInit( );
@@ -783,14 +824,8 @@ InitGraphics( )
 	// set the uniform variables that will not change:
 	
 	Pattern.Use( );
-    Pattern.SetUniformVariable( (char *)"uKa", 0.1f );		//project3
-    Pattern.SetUniformVariable( (char *)"uKd", 0.5f );
-    Pattern.SetUniformVariable( (char *)"uKs", 0.4f );
-    Pattern.SetUniformVariable( (char *)"uShininess", 14.f );
-
-    Pattern.SetUniformVariable( (char *)"uLightY", 1.f );
-    Pattern.SetUniformVariable( (char *)"uLightX", 1.f );
-    Pattern.SetUniformVariable( (char *)"uLightZ", 1.f );
+    Pattern.SetUniformVariable( (char *)"uEta", 1.9f );			//project4
+    Pattern.SetUniformVariable( (char *)"uWhiteMix", 0.5f );
     Pattern.UnUse( );
 }
 
@@ -808,32 +843,14 @@ InitLists( )
 
 	glutSetWindow( MainWindow );
 
-	// create the object:		//project3
-    float xmin = -1.f;
-    float xmax =  1.f;
-    float ymin = -1.f;
-    float ymax =  1.f;
-    float dx = xmax - xmin;
-    float dy = ymax - ymin;
-    float z = 0.f;
-    int numy = 128;
-    int numx = 128;
-
-    SheetList = glGenLists(1);
-    glNewList(SheetList, GL_COMPILE);
-    for(int iy = 0; iy <= numy; iy++) {
-        glBegin(GL_QUAD_STRIP);
-        glNormal3f(0., 0., 1.);
-        for(int ix = 0; ix <= numx; ix++) {
-            glTexCoord2f( (float)ix/(float)numx, (float)(iy+0)/(float)numy );
-            glVertex3f( xmin + dx*(float)ix/(float)numx, ymin + dy*(float)(iy+0)/(float)numy, z );
-            glTexCoord2f( (float)ix/(float)numx, (float)(iy+1)/(float)numy );
-            glVertex3f( xmin + dx*(float)ix/(float)numx, ymin + dy*(float)(iy+1)/(float)numy, z );
-        }
-        glEnd();
-    }
-    glEndList();
-
+	//project4
+	DeerList = glGenLists(1);
+	glNewList( DeerList, GL_COMPILE );
+	glPushMatrix();
+        glScalef(.45f, .45f, .45f);
+        LoadObjFile((char *)"deer.obj");
+    glPopMatrix();
+	glEndList( );
 
 	// create the axes:
 
@@ -875,25 +892,17 @@ Keyboard( unsigned char c, int x, int y )
             NowProjection = PERSP;
             break;
 
-        case 'a':			//project3
-            if (uA >= 0.01) {
-                uA -= 0.01;
+		//project4
+		case 'm':
+            if (uMix >= 0.01) {
+                uMix -= 0.2;
+				printf("uMix after m is %f \n", uMix);
             }
             break;
-        case 'A':
-            if (uA <= 0.99) {
-                uA += 0.01;
-            }
-            break;
-
-        case 'b':
-            if (uP >= 0.01) {
-                uP -= 0.01;
-            }
-            break;
-        case 'B':
-            if (uP <= 0.99) {
-                uP += 0.01;
+        case 'M':
+            if (uMix <= 1.99) {
+                uMix += 0.2;
+				printf("uMix after M is %f \n", uMix);
             }
             break;
 
@@ -1049,8 +1058,8 @@ Reset( )
 	NowColor = YELLOW;
 	NowProjection = PERSP;
 	Xrot = Yrot = 0.;
-	uA = 0.5f;		//project3
-    uP = 0.05f;
+	uMix = 1.f;			//project4
+    uEta = 1.9f;
 	uNoiseAmp = 1.5f;
     uNoiseFreq = 1.05f;
 }
