@@ -58,7 +58,7 @@
 
 // title of these windows:
 
-const char *WINDOWTITLE = "CS557 Project #3B Displacement Mapping, Bump Mapping, and Lighting -- Joe Graphics";
+const char *WINDOWTITLE = "CS557 Project #4 Cube Mapping Reflective and Refractive Surfaces -- Joe Graphics";
 const char *GLUITITLE   = "User Interface Window";
 
 // what the glui package defines as true and false:
@@ -825,7 +825,7 @@ InitGraphics( )
 	
 	Pattern.Use( );
     Pattern.SetUniformVariable( (char *)"uEta", 1.9f );			//project4
-    Pattern.SetUniformVariable( (char *)"uWhiteMix", 0.5f );
+    Pattern.SetUniformVariable( (char *)"uWhiteMix", 0.6f );
     Pattern.UnUse( );
 }
 
