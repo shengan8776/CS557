@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "keytime.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -28,14 +27,14 @@
 #endif
 #include "glut.h"
 
-//#define GLM_FORCE_RADIANS
-//#include "glm/vec2.hpp"
-//#include "glm/vec3.hpp"
-//#include "glm/mat3x3.hpp"
-//#include "glm/mat4x4.hpp"
-//#include "glm/gtc/matrix_transform.hpp"
-//#include "glm/gtc/matrix_inverse.hpp"
-//#include "glm/gtc/type_ptr.hpp"
+#define GLM_FORCE_RADIANS
+#include "glm/vec2.hpp"
+#include "glm/vec3.hpp"
+#include "glm/mat3x3.hpp"
+#include "glm/mat4x4.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/matrix_inverse.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 
 //	This is a sample OpenGL / GLUT program
@@ -58,7 +57,7 @@
 
 // title of these windows:
 
-const char *WINDOWTITLE = "CS557 Project #2 Noisy Elliptical Dots -- Joe Graphics";
+const char *WINDOWTITLE = "CS557 Project #5 Image Manipulation in a \"Magic Lens\" -- Joe Graphics";
 const char *GLUITITLE   = "User Interface Window";
 
 // what the glui package defines as true and false:
@@ -183,13 +182,9 @@ float	Time;					// used for animation, this has a value between 0. and 1.
 int		Xmouse, Ymouse;			// mouse values
 float	Xrot, Yrot;				// rotation angles in degrees
 
-float 	uAd, uBd, uTol;
-float 	uNoiseAmp, uNoiseFreq;	//project2
-
-int		SphereList;
-
-// a defined value:
-const int MSEC = 10000;         // 10000 milliseconds = 10 seconds
+int		ImageList;				//project5
+GLuint  DogTexture;
+float 	uSc, uTc, uRad, uMag, uWhirl, uMosaic;
 
 
 // function prototypes:
@@ -271,14 +266,13 @@ MulArray3(float factor, float a, float b, float c )
 #include "osusphere.cpp"
 //#include "osucone.cpp"
 //#include "osutorus.cpp"
-//#include "bmptotexture.cpp"
+#include "bmptotexture.cpp"
 //#include "loadobjfile.cpp"
 #include "keytime.cpp"
 #include "glslprogram.cpp"
 
 float NowS0, NowT0, NowD;
 GLSLProgram Pattern;
-GLuint  NoiseTexture;
 
 
 // main program:
@@ -397,7 +391,7 @@ Display( )
 
 	// rotate the scene:
 
-	glRotatef( (GLfloat)Yrot, 0.f, 1.f, 0.f );
+	glRotatef( (GLfloat)Yrot, 0.f, 1.f, 0.f );		//project5//help
 	glRotatef( (GLfloat)Xrot, 1.f, 0.f, 0.f );
 
 	// uniformly scale the scene:
@@ -418,25 +412,29 @@ Display( )
 
 	glEnable( GL_NORMALIZE );
 
-	// draw the box object by calling up its display list:
+	// draw the box object by calling up its display list:		//project5
+    int DogUnit = 10;
 
-	glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_3D, NoiseTexture);
+    Pattern.Use( );
 
-	Pattern.Use( );
+    glActiveTexture(GL_TEXTURE0 + DogUnit);
+    glBindTexture(GL_TEXTURE_2D, DogTexture);
 
 	// set the uniform variables that will change over time:
 
-    Pattern.SetUniformVariable( (char *)"uAd" , uAd  );
-    Pattern.SetUniformVariable( (char *)"uBd" , uBd  );
-    Pattern.SetUniformVariable( (char *)"uTol" , uTol  );
+    Pattern.SetUniformVariable( (char *)"uSc" , uSc  );
+    Pattern.SetUniformVariable( (char *)"uTc" , uTc  );
+    Pattern.SetUniformVariable( (char *)"uRad" , uRad  );
+    Pattern.SetUniformVariable( (char *)"uMag" , uMag  );
+    Pattern.SetUniformVariable( (char *)"uWhirl" , uWhirl  );
+    Pattern.SetUniformVariable( (char *)"uMosaic" , uMosaic  );
 
-    Pattern.SetUniformVariable( (char *)"uNoiseFreq" , uNoiseFreq  );
-    Pattern.SetUniformVariable( (char *)"uNoiseAmp" , uNoiseAmp  );
+    Pattern.SetUniformVariable( (char *)"uTexUnit" , DogUnit );
 
-    Pattern.SetUniformVariable( (char *)"uNoiseTexture" , 3 );			//project2
-
-	glCallList( SphereList );
+    glPushMatrix();
+        glScalef(2.2f, 2.2f, 2.2f);
+        glCallList(ImageList);
+    glPopMatrix();
 
 	Pattern.UnUse( );       // Pattern.Use(0);  also works
 
@@ -643,27 +641,6 @@ InitMenus( )
 	glutAttachMenu( GLUT_RIGHT_BUTTON );
 }
 
-//project2
-unsigned char* ReadTexture3D(char* filename, int* width, int* height, int* depth) {
-    FILE* fp = fopen(filename, "rb");
-    if (fp == NULL) { return NULL; }
-
-    int nums, numt, nump;
-    fread(&nums, 4, 1, fp);
-    fread(&numt, 4, 1, fp);
-    fread(&nump, 4, 1, fp);
-    fprintf(stderr, "Texture size = %d x %d x %d\n", nums, numt, nump);
-
-    *width = nums;
-    *height = numt;
-    *depth = nump;
-
-    unsigned char * texture = new unsigned char[ 4 * nums * numt * nump ];
-    fread(texture, 4 * nums * numt * nump, 1, fp);
-    fclose(fp);
-    return texture;
-}
-
 
 // initialize the glut and OpenGL libraries:
 //	also setup callback functions
@@ -742,22 +719,6 @@ InitGraphics( )
 
 	glutIdleFunc( Animate );
 
-	glGenTextures(1, &NoiseTexture);		//project2
-    int nums, numt, nump;
-    unsigned char* texture = ReadTexture3D("noise3d.064.tex", &nums, &numt, &nump);
-    if (texture == NULL) {
-        fprintf(stderr, "Couldn't load noise texture");
-    }
-
-    glBindTexture(GL_TEXTURE_3D, NoiseTexture);
-    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, nums, numt, nump, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, texture);
-
 	// init the glew package (a window must be open to do this):
 
 #ifdef WIN32
@@ -772,6 +733,18 @@ InitGraphics( )
 #endif
 
 	// all other setups go here, such as GLSLProgram and KeyTime setups:
+    glGenTextures( 1, &DogTexture );
+
+    int width, height;
+    char *file = (char *)"small-dog.bmp";
+    unsigned char* texture = BmpToTexture(file, &width, &height);
+
+    glBindTexture( GL_TEXTURE_2D, DogTexture );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture );
 
 	Pattern.Init( );
 	bool valid = Pattern.Create( (char *)"pattern.vert", (char *)"pattern.frag" );
@@ -780,14 +753,6 @@ InitGraphics( )
 	else
 		fprintf( stderr, "Pattern shader created!\n" );
 
-	// set the uniform variables that will not change:
-	
-	Pattern.Use( );
-	Pattern.SetUniformVariable( (char *)"uKa", 0.1f );
-	Pattern.SetUniformVariable( (char *)"uKd", 0.5f );
-	Pattern.SetUniformVariable( (char *)"uKs", 0.4f );
-	Pattern.SetUniformVariable( (char *)"uShininess", 12.f );
-	Pattern.UnUse( );
 }
 
 
@@ -804,12 +769,71 @@ InitLists( )
 
 	glutSetWindow( MainWindow );
 
-	// create the object:
+	//suggest single quad
+	ImageList = glGenLists(1);
+    glNewList(ImageList, GL_COMPILE);
+        glBegin(GL_QUADS);
+            // Vertex 1: bottom-left
+            glTexCoord2f(0.0f, 0.0f);
+            glVertex2f(-1.0f, -1.0f); // Define a larger quad in world space
 
-	SphereList = glGenLists( 1 );
-	glNewList( SphereList, GL_COMPILE );
-		OsuSphere( 1., 64, 64 );
-	glEndList( );
+            // Vertex 2: bottom-right
+            glTexCoord2f(1.0f, 0.0f);
+            glVertex2f( 1.0f, -1.0f);
+
+            // Vertex 3: top-right
+            glTexCoord2f(1.0f, 1.0f);
+            glVertex2f( 1.0f,  1.0f);
+
+            // Vertex 4: top-left
+            glTexCoord2f(0.0f, 1.0f);
+            glVertex2f(-1.0f,  1.0f);
+        glEnd();
+    glEndList();
+
+	/*
+	// create the object:	//project5
+
+	const int vertices = 1000;  // Grid size (more = denser mesh)
+    const float step = 1.0f / vertices;  // Step size between vertices
+
+
+	ImageList = glGenLists(1);
+    glNewList(ImageList, GL_COMPILE);
+        glBegin(GL_QUADS);
+        for (int i = 0; i < vertices; i++) {
+            for (int j = 0; j < vertices; j++) {
+                float x = -0.5f + i * step;
+                float y = -0.5f + j * step;
+
+				*		//old
+                glVertex2f(x, y);
+                glVertex2f(x + step, y);
+                glVertex2f(x + step, y + step);
+                glVertex2f(x, y + step);
+				*
+				
+				//suggest
+				// Vertex 1: (x, y) - bottom-left  (texture coord: (0, 0))
+                glTexCoord2f(0.0f, 0.0f);
+                glVertex2f(x, y);
+
+                // Vertex 2: (x + step, y) - bottom-right (texture coord: (1, 0))
+                glTexCoord2f(1.0f, 0.0f);
+                glVertex2f(x + step, y);
+
+                // Vertex 3: (x + step, y + step) - top-right (texture coord: (1, 1))
+                glTexCoord2f(1.0f, 1.0f);
+                glVertex2f(x + step, y + step);
+
+                // Vertex 4: (x, y + step) - top-left (texture coord: (0, 1))
+                glTexCoord2f(0.0f, 1.0f);
+                glVertex2f(x, y + step);
+            }
+        }
+        glEnd();
+    glEndList();
+	*/
 
 
 	// create the axes:
@@ -833,8 +857,8 @@ Keyboard( unsigned char c, int x, int y )
 
 	switch( c )
 	{
-		case 'm':
-		case 'M':
+		case 'f':
+		case 'F':
 			Freeze = !Freeze;
 			if (Freeze)
 				glutIdleFunc(NULL);
@@ -851,59 +875,79 @@ Keyboard( unsigned char c, int x, int y )
 		case 'P':
 			NowProjection = PERSP;
 			break;
-		
-		case 'a':
-            if (uAd >= 0.05) {
-                uAd -= 0.01;
-            }
-            break;
-        case 'A':
-            if (uAd <= 0.95) {
-                uAd += 0.01;
-            }
-            break;
 
-        case 'b':
-            if (uBd >= 0.05) {
-                uBd -= 0.01;
+		//project5
+		case 's':
+            if (uSc >= 0.01) {
+                uSc -= 0.05;
+                printf("uSc: %f\n", uSc);
             }
             break;
-        case 'B':
-            if (uBd <= 0.95) {
-                uBd += 0.01;
+        case 'S':
+            if (uSc <= 0.99) {
+                uSc += 0.05;
+                printf("uSc: %f\n", uSc);
             }
             break;
 
         case 't':
-            if (uTol >= 0.05) {
-                uTol -= 0.05;
+            if (uTc >= 0.01) {
+                uTc -= 0.05;
+                printf("uTc: %f\n", uTc);
             }
             break;
         case 'T':
-            if (uTol <= 0.95) {
-                uTol += 0.05;
+            if (uTc <= 0.99) {
+                uTc += 0.05;
+                printf("uTc: %f\n", uTc);
             }
             break;
 
-        case 'f':						//project2
-            if (uNoiseFreq >= 0.05) {
-                uNoiseFreq -= 0.01;
+        case 'r':
+            if (uRad >= 0.01) {
+                uRad -= 0.02;
+                printf("uRad: %f\n", uRad);
             }
             break;
-        case 'F':
-            if (uNoiseFreq <= 1.95) {
-                uNoiseFreq += 0.01;
+        case 'R':
+            if (uRad <= 0.99) {
+                uRad += 0.02;
+                printf("uRad: %f\n", uRad);
             }
             break;
 
-        case 's':
-            if (uNoiseAmp >= 0.05) {
-                uNoiseAmp -= 0.05;
+        case 'm':
+            if (uMag >= 0.11) {
+                uMag -= 0.1;
+                printf("uMag: %f\n", uMag);
             }
             break;
-        case 'S':
-            if (uNoiseAmp <= 0.95) {
-                uNoiseAmp += 0.05;
+        case 'M':
+            if (uMag <= 5.9) {
+                uMag += 0.1;
+                printf("uMag: %f\n", uMag);
+            }
+            break;
+
+        case 'w':
+            uWhirl -= 1.0;
+            printf("uWhirl: %f\n", uWhirl);
+            break;
+        case 'W':
+            uWhirl += 1.0;
+            printf("uWhirl: %f\n", uWhirl);
+            break;
+
+        case 'i':
+            if (uMosaic >= 0.002) {
+                uMosaic -= 0.001;
+                printf("uMosaic: %f\n", uMosaic);
+            }
+            break;
+        case 'I':
+            if (uMosaic <= 0.1) {
+                uMosaic += 0.001;
+                printf("uMosaic: %f\n", uMosaic);
             }
             break;
 		
@@ -991,7 +1035,7 @@ MouseButton( int button, int state, int x, int y )
 void
 MouseMotion( int x, int y )
 {
-	int dx = x - Xmouse;		// change in mouse coords
+	int dx = x - Xmouse;		// change in mouse coords	//project5 //help
 	int dy = y - Ymouse;
 
 	if( ( ActiveButton & LEFT ) != 0 )
@@ -1033,11 +1077,12 @@ Reset( )
 	NowColor = YELLOW;
 	NowProjection = PERSP;
 	Xrot = Yrot = 0.;
-	uAd = 0.05f;
-    uBd = 0.05f;
-    uTol = 0.05f;
-    uNoiseFreq = 0.05f;
-    uNoiseAmp = 0.05f;
+	uSc = 0.5f;				//project5
+    uTc = 0.5f;
+    uRad = 0.0f;
+    uMag = 1.0f;
+    uWhirl = 0.01f;
+    uMosaic = 0.01f;
 }
 
 

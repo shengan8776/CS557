@@ -1,84 +1,37 @@
-// lighting uniform variables -- these can be set once and left alone:
-uniform float   uKa, uKd, uKs;	 // coefficients of each type of lighting -- make sum to 1.0
-uniform float   uShininess;	 // specular exponent
+uniform float uSc, uTc, uRad;
+uniform float uMag, uWhirl, uMosaic; 
 
-// in Project #1, these have to be set dynamically from glman sliders or keytime animations or by keyboard hits:
-uniform float	uAd, uBd;
-uniform float	uTol;
+uniform sampler2D uImageUnit;
 
-uniform sampler3D uNoiseTexture;
-
-uniform float uNoiseFreq, uNoiseAmp;
-
-// in variables from the vertex shader and interpolated in the rasterizer:
-varying  vec3  vN;		   // normal vector
-varying  vec3  vL;		   // vector from point to light
-varying  vec3  vE;		   // vector from point to eye
-varying  vec2  vST;		   // (s,t) texture coordinates
-varying  vec3  vMC;		   // model coordinates
-
-const vec3 OBJECTCOLOR          = vec3( 1., 1., 1. );           // color to make the object
-const vec3 ELLIPSECOLOR         = vec3( 1., 0.3, 0.9 );           // color to make the ellipse
-const vec3 SPECULARCOLOR        = vec3( 1., 1., 1. );
+varying vec2 vST;
 
 void main() {
-  	vec3 myColor = OBJECTCOLOR;
-	vec2 st = vST;
+    vec2 st = vST  - vec2(uSc, uTc);
+    float r = length(st);
 
-	vec4 nv = texture3D(uNoiseTexture, uNoiseFreq *  vMC );
-    float n = nv.r + nv.g + nv.b + nv.a;
-    n = n - 2.;
-    n *= uNoiseAmp;
+    if (r >= uRad) {
+        vec3 rgb = texture2D(uImageUnit, vST).rgb;
+        gl_FragColor = vec4(rgb, 1.);
+    }	
+	else {
+		float rprime = r / uMag;
 
+		float theta = atan(st.t, st.s);
+    	float thetaprime = theta - uWhirl * rprime;
 
-	// blend OBJECTCOLOR and ELLIPSECOLOR by using the ellipse equation to decide how close
-	// 	this fragment is to the ellipse border:
+		st = rprime * vec2(cos(thetaprime), sin(thetaprime));
+		st += vec2(uSc, uTc);
 
-	float Ar = uAd / 2.;
-	float Br = uBd / 2.;
-
-	int numins = int( st.s / uAd );
-	int numint = int( st.t / uBd );
-
-	float Sc = (float(numins) * uAd) + Ar;
-	float Tc = (float(numint) * uBd) + Br;
-
-	float ds = st.s - Sc;
-    float dt = st.t - Tc;
-    float oldDist = sqrt((ds * ds) + (dt * dt));
-    float newDist = oldDist + n;
-    float scale = newDist / oldDist;
-
-    ds *= scale;
-    ds /= Ar;
-    dt *= scale;
-    dt /= Br;
-
-	float elipse_result = (ds * ds) + (dt * dt);
-
-	float t = smoothstep( 1.-uTol, 1.+uTol, elipse_result );
- 	myColor = mix( ELLIPSECOLOR, OBJECTCOLOR, t );
-
-	// now use myColor in the per-fragment lighting equations:
-
-	vec3 Normal    = normalize(vN);
-	vec3 Light     = normalize(vL);
-	vec3 Eye       = normalize(vE);
-
-  	vec3 ambient = uKa * myColor;
-
-	float d = max( dot(Normal,Light), 0. );       // only do diffuse if the light can see the point
-	vec3 diffuse = uKd * d * myColor;
-
-	float s = 0.;
-	if( d > 0. )              // only do specular if the light can see the point
-	{
-		vec3 ref = normalize(  reflect( -Light, Normal )  );
-		float cosphi = dot( Eye, ref );
-		if( cosphi > 0. )
-				s = pow( max( cosphi, 0. ), uShininess );
+		float MosaicR = uMosaic / 2.; 
+		int numins = int(st.s / MosaicR);
+		int numint = int(st.t / MosaicR);
+		float sc = (float(numins) * uMosaic) + MosaicR;
+		float tc = (float(numint) * uMosaic) + MosaicR;
+		st.s = sc;
+		st.t = tc;
+		
+		vec3 rgb = texture2D(uImageUnit, st).rgb;
+    	gl_FragColor = vec4(rgb, 1.);
 	}
-
-	vec3 specular = uKs * s * SPECULARCOLOR.rgb;
-	gl_FragColor = vec4( ambient + diffuse + specular,  1. );
+    
 }
