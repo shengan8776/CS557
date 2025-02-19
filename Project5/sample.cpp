@@ -183,7 +183,6 @@ int		Xmouse, Ymouse;			// mouse values
 float	Xrot, Yrot;				// rotation angles in degrees
 
 int		ImageList;				//project5
-GLuint  DogTexture;
 float 	uSc, uTc, uRad, uMag, uWhirl, uMosaic;
 
 
@@ -391,7 +390,7 @@ Display( )
 
 	// rotate the scene:
 
-	glRotatef( (GLfloat)Yrot, 0.f, 1.f, 0.f );		//project5//help
+	glRotatef( (GLfloat)Yrot, 0.f, 1.f, 0.f );
 	glRotatef( (GLfloat)Xrot, 1.f, 0.f, 0.f );
 
 	// uniformly scale the scene:
@@ -412,13 +411,10 @@ Display( )
 
 	glEnable( GL_NORMALIZE );
 
-	// draw the box object by calling up its display list:		//project5
-    int DogUnit = 10;
-
+	// draw the box object by calling up its display list:		
+	
+	//project5
     Pattern.Use( );
-
-    glActiveTexture(GL_TEXTURE0 + DogUnit);
-    glBindTexture(GL_TEXTURE_2D, DogTexture);
 
 	// set the uniform variables that will change over time:
 
@@ -428,8 +424,6 @@ Display( )
     Pattern.SetUniformVariable( (char *)"uMag" , uMag  );
     Pattern.SetUniformVariable( (char *)"uWhirl" , uWhirl  );
     Pattern.SetUniformVariable( (char *)"uMosaic" , uMosaic  );
-
-    Pattern.SetUniformVariable( (char *)"uTexUnit" , DogUnit );
 
     glPushMatrix();
         glScalef(2.2f, 2.2f, 2.2f);
@@ -732,14 +726,13 @@ InitGraphics( )
 	fprintf( stderr, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 #endif
 
+	//project5
 	// all other setups go here, such as GLSLProgram and KeyTime setups:
-    glGenTextures( 1, &DogTexture );
 
     int width, height;
     char *file = (char *)"small-dog.bmp";
     unsigned char* texture = BmpToTexture(file, &width, &height);
 
-    glBindTexture( GL_TEXTURE_2D, DogTexture );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
@@ -769,7 +762,7 @@ InitLists( )
 
 	glutSetWindow( MainWindow );
 
-	//suggest single quad
+	//project5
 	ImageList = glGenLists(1);
     glNewList(ImageList, GL_COMPILE);
         glBegin(GL_QUADS);
@@ -790,51 +783,6 @@ InitLists( )
             glVertex2f(-1.0f,  1.0f);
         glEnd();
     glEndList();
-
-	/*
-	// create the object:	//project5
-
-	const int vertices = 1000;  // Grid size (more = denser mesh)
-    const float step = 1.0f / vertices;  // Step size between vertices
-
-
-	ImageList = glGenLists(1);
-    glNewList(ImageList, GL_COMPILE);
-        glBegin(GL_QUADS);
-        for (int i = 0; i < vertices; i++) {
-            for (int j = 0; j < vertices; j++) {
-                float x = -0.5f + i * step;
-                float y = -0.5f + j * step;
-
-				*		//old
-                glVertex2f(x, y);
-                glVertex2f(x + step, y);
-                glVertex2f(x + step, y + step);
-                glVertex2f(x, y + step);
-				*
-				
-				//suggest
-				// Vertex 1: (x, y) - bottom-left  (texture coord: (0, 0))
-                glTexCoord2f(0.0f, 0.0f);
-                glVertex2f(x, y);
-
-                // Vertex 2: (x + step, y) - bottom-right (texture coord: (1, 0))
-                glTexCoord2f(1.0f, 0.0f);
-                glVertex2f(x + step, y);
-
-                // Vertex 3: (x + step, y + step) - top-right (texture coord: (1, 1))
-                glTexCoord2f(1.0f, 1.0f);
-                glVertex2f(x + step, y + step);
-
-                // Vertex 4: (x, y + step) - top-left (texture coord: (0, 1))
-                glTexCoord2f(0.0f, 1.0f);
-                glVertex2f(x, y + step);
-            }
-        }
-        glEnd();
-    glEndList();
-	*/
-
 
 	// create the axes:
 
@@ -1035,7 +983,7 @@ MouseButton( int button, int state, int x, int y )
 void
 MouseMotion( int x, int y )
 {
-	int dx = x - Xmouse;		// change in mouse coords	//project5 //help
+	int dx = x - Xmouse;		// change in mouse coords
 	int dy = y - Ymouse;
 
 	if( ( ActiveButton & LEFT ) != 0 )
@@ -1052,7 +1000,7 @@ MouseMotion( int x, int y )
 
 		if( Scale < MINSCALE )
 			Scale = MINSCALE;
-	}
+	}	
 
 	Xmouse = x;			// new current position
 	Ymouse = y;
@@ -1080,9 +1028,9 @@ Reset( )
 	uSc = 0.5f;				//project5
     uTc = 0.5f;
     uRad = 0.0f;
-    uMag = 1.0f;
+    uMag = 1.2f;
     uWhirl = 0.01f;
-    uMosaic = 0.01f;
+    uMosaic = 0.008f;
 }
 
 

@@ -6,7 +6,7 @@ uniform sampler2D uImageUnit;
 varying vec2 vST;
 
 void main() {
-    vec2 st = vST  - vec2(uSc, uTc);
+    vec2 st = vST - vec2(uSc, uTc);
     float r = length(st);
 
     if (r >= uRad) {
@@ -22,11 +22,10 @@ void main() {
 		st = rprime * vec2(cos(thetaprime), sin(thetaprime));
 		st += vec2(uSc, uTc);
 
-		float MosaicR = uMosaic / 2.; 
-		int numins = int(st.s / MosaicR);
-		int numint = int(st.t / MosaicR);
-		float sc = (float(numins) * uMosaic) + MosaicR;
-		float tc = (float(numint) * uMosaic) + MosaicR;
+		int numins = int(st.s / uMosaic);
+		int numint = int(st.t / uMosaic);
+		float sc = (float(numins) * uMosaic) + uMosaic;
+		float tc = (float(numint) * uMosaic) + uMosaic;
 		st.s = sc;
 		st.t = tc;
 		
