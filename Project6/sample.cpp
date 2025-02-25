@@ -57,7 +57,7 @@
 
 // title of these windows:
 
-const char *WINDOWTITLE = "CS557 Project #5 Image Manipulation in a \"Magic Lens\" -- Joe Graphics";
+const char *WINDOWTITLE = "CS557 Project #6 Snake Menagerie -- Joe Graphics";
 const char *GLUITITLE   = "User Interface Window";
 
 // what the glui package defines as true and false:
@@ -182,8 +182,12 @@ float	Time;					// used for animation, this has a value between 0. and 1.
 int		Xmouse, Ymouse;			// mouse values
 float	Xrot, Yrot;				// rotation angles in degrees
 
-int		ImageList;				//project5
-float 	uSc, uTc, uRad, uMag, uWhirl, uMosaic;
+//project6
+float 	uAd, uBd, uTol;
+float 	uNoiseAmp, uNoiseFreq;
+float 	uSquirmAmp, uSquirmFreq;
+
+int		SnakeList;
 
 
 // function prototypes:
@@ -265,14 +269,14 @@ MulArray3(float factor, float a, float b, float c )
 #include "osusphere.cpp"
 //#include "osucone.cpp"
 //#include "osutorus.cpp"
-#include "bmptotexture.cpp"
-//#include "loadobjfile.cpp"
+//#include "bmptotexture.cpp"
+#include "loadobjfile.cpp"
 #include "keytime.cpp"
 #include "glslprogram.cpp"
 
 float NowS0, NowT0, NowD;
 GLSLProgram Pattern;
-
+GLuint  NoiseTexture;
 
 // main program:
 
@@ -412,25 +416,29 @@ Display( )
 	glEnable( GL_NORMALIZE );
 
 	// draw the box object by calling up its display list:		
+	//project6
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_3D, NoiseTexture);
+
 	
-	//project5
+	//project6
     Pattern.Use( );
 
 	// set the uniform variables that will change over time:
 
-    Pattern.SetUniformVariable( (char *)"uSc" , uSc  );
-    Pattern.SetUniformVariable( (char *)"uTc" , uTc  );
-    Pattern.SetUniformVariable( (char *)"uRad" , uRad  );
-    Pattern.SetUniformVariable( (char *)"uMag" , uMag  );
-    Pattern.SetUniformVariable( (char *)"uWhirl" , uWhirl  );
-    Pattern.SetUniformVariable( (char *)"uMosaic" , uMosaic  );
+    Pattern.SetUniformVariable( (char *)"uNoiseFreq" , uNoiseFreq  );
+    Pattern.SetUniformVariable( (char *)"uNoiseAmp" , uNoiseAmp  );
 
-    glPushMatrix();
-        glScalef(2.2f, 2.2f, 2.2f);
-        glCallList(ImageList);
-    glPopMatrix();
+    Pattern.SetUniformVariable( (char *)"uSquirmFreq" , uSquirmFreq  );
+    Pattern.SetUniformVariable( (char *)"uSquirmAmp" , uSquirmAmp  );
 
-	Pattern.UnUse( );       // Pattern.Use(0);  also works
+    Pattern.SetUniformVariable( (char *)"uTime" ,  Time);
+
+    Pattern.SetUniformVariable( (char *)"uNoiseTexture" , 3 );
+
+    glCallList( SnakeList );
+
+    Pattern.UnUse( );       // Pattern.Use(0);  also works
 
 
 	// draw some gratuitous text that just rotates on top of the scene:
@@ -635,6 +643,26 @@ InitMenus( )
 	glutAttachMenu( GLUT_RIGHT_BUTTON );
 }
 
+unsigned char* ReadTexture3D(char* filename, int* width, int* height, int* depth) 
+{
+    FILE* fp = fopen(filename, "rb");
+    if (fp == NULL) { return NULL; }
+
+    int nums, numt, nump;
+    fread(&nums, 4, 1, fp);
+    fread(&numt, 4, 1, fp);
+    fread(&nump, 4, 1, fp);
+    fprintf(stderr, "Texture size = %d x %d x %d\n", nums, numt, nump);
+
+    *width = nums;
+    *height = numt;
+    *depth = nump;
+
+    unsigned char * texture = new unsigned char[ 4 * nums * numt * nump ];
+    fread(texture, 4 * nums * numt * nump, 1, fp);
+    fclose(fp);
+    return texture;
+}
 
 // initialize the glut and OpenGL libraries:
 //	also setup callback functions
@@ -713,6 +741,13 @@ InitGraphics( )
 
 	glutIdleFunc( Animate );
 
+	glGenTextures(1, &NoiseTexture);
+    int nums, numt, nump;
+    unsigned char* texture = ReadTexture3D("noise3d.064.tex", &nums, &numt, &nump);
+    if (texture == NULL) {
+        fprintf(stderr, "Couldn't load noise texture");
+    }
+
 	// init the glew package (a window must be open to do this):
 
 #ifdef WIN32
@@ -726,18 +761,15 @@ InitGraphics( )
 	fprintf( stderr, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 #endif
 
-	//project5
-	// all other setups go here, such as GLSLProgram and KeyTime setups:
-
-    int width, height;
-    char *file = (char *)"small-dog.bmp";
-    unsigned char* texture = BmpToTexture(file, &width, &height);
-
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture );
+	//project6
+    glBindTexture(GL_TEXTURE_3D, NoiseTexture);
+    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, nums, numt, nump, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, texture);
 
 	Pattern.Init( );
 	bool valid = Pattern.Create( (char *)"pattern.vert", (char *)"pattern.frag" );
@@ -746,6 +778,12 @@ InitGraphics( )
 	else
 		fprintf( stderr, "Pattern shader created!\n" );
 
+	Pattern.Use( );
+	Pattern.SetUniformVariable( (char *)"uKa", 0.1f );
+	Pattern.SetUniformVariable( (char *)"uKd", 0.5f );
+	Pattern.SetUniformVariable( (char *)"uKs", 0.4f );
+	Pattern.SetUniformVariable( (char *)"uShininess", 12.f );
+	Pattern.UnUse( );
 }
 
 
@@ -762,27 +800,14 @@ InitLists( )
 
 	glutSetWindow( MainWindow );
 
-	//project5
-	ImageList = glGenLists(1);
-    glNewList(ImageList, GL_COMPILE);
-        glBegin(GL_QUADS);
-            // Vertex 1: bottom-left
-            glTexCoord2f(0.0f, 0.0f);
-            glVertex2f(-1.0f, -1.0f); // Define a larger quad in world space
-
-            // Vertex 2: bottom-right
-            glTexCoord2f(1.0f, 0.0f);
-            glVertex2f( 1.0f, -1.0f);
-
-            // Vertex 3: top-right
-            glTexCoord2f(1.0f, 1.0f);
-            glVertex2f( 1.0f,  1.0f);
-
-            // Vertex 4: top-left
-            glTexCoord2f(0.0f, 1.0f);
-            glVertex2f(-1.0f,  1.0f);
-        glEnd();
-    glEndList();
+	//project6
+	SnakeList = glGenLists( 1 );
+    glNewList( SnakeList, GL_COMPILE );
+        glPushMatrix();
+            glScalef(0.2f, 0.2f, 0.2f);
+            LoadObjFile((char*)"snakeH.obj");
+        glPopMatrix();
+    glEndList( );
 
 	// create the axes:
 
@@ -824,78 +849,55 @@ Keyboard( unsigned char c, int x, int y )
 			NowProjection = PERSP;
 			break;
 
-		//project5
-		case 's':
-            if (uSc >= 0.01) {
-                uSc -= 0.05;
-                printf("uSc: %f\n", uSc);
+		//project6
+		case 'g':
+            if (uSquirmFreq >= 0.05) {
+                uSquirmFreq -= 0.01;
+				printf("uSquirmFreq is %f \n", uSquirmFreq);
             }
             break;
-        case 'S':
-            if (uSc <= 0.99) {
-                uSc += 0.05;
-                printf("uSc: %f\n", uSc);
-            }
-            break;
-
-        case 't':
-            if (uTc >= 0.01) {
-                uTc -= 0.05;
-                printf("uTc: %f\n", uTc);
-            }
-            break;
-        case 'T':
-            if (uTc <= 0.99) {
-                uTc += 0.05;
-                printf("uTc: %f\n", uTc);
+        case 'G':
+            if (uSquirmFreq <= 2.95) {
+                uSquirmFreq += 0.01;
+				printf("uSquirmFreq is %f \n", uSquirmFreq);
             }
             break;
 
-        case 'r':
-            if (uRad >= 0.01) {
-                uRad -= 0.02;
-                printf("uRad: %f\n", uRad);
+        case 'l':
+            if (uSquirmAmp >= 0.05) {
+                uSquirmAmp -= 0.05;
+				printf("uSquirmAmp is %f \n", uSquirmAmp);
+            }
+            break;
+        case 'L':
+            if (uSquirmAmp <= 2.95) {
+                uSquirmAmp += 0.05;
+				printf("uSquirmAmp is %f \n", uSquirmAmp);
+            }
+            break;
+		case 'r':
+            if (uNoiseFreq >= 0.05) {
+                uNoiseFreq -= 0.01;
+				printf("uNoiseFreq is %f \n", uNoiseFreq);
             }
             break;
         case 'R':
-            if (uRad <= 0.99) {
-                uRad += 0.02;
-                printf("uRad: %f\n", uRad);
+            if (uNoiseFreq <= 1.95) {
+                uNoiseFreq += 0.01;
+				printf("uNoiseFreq is %f \n", uNoiseFreq);
             }
             break;
 
-        case 'm':
-            if (uMag >= 0.11) {
-                uMag -= 0.1;
-                printf("uMag: %f\n", uMag);
+        case 's':
+            if (uNoiseAmp >= 0.05) {
+                uNoiseAmp -= 0.05;
+				printf("uNoiseAmp is %f \n", uNoiseAmp);
             }
             break;
-        case 'M':
-            if (uMag <= 5.9) {
-                uMag += 0.1;
-                printf("uMag: %f\n", uMag);
-            }
-            break;
-
-        case 'w':
-            uWhirl -= 1.0;
-            printf("uWhirl: %f\n", uWhirl);
-            break;
-        case 'W':
-            uWhirl += 1.0;
-            printf("uWhirl: %f\n", uWhirl);
-            break;
-
-        case 'i':
-            if (uMosaic >= 0.002) {
-                uMosaic -= 0.001;
-                printf("uMosaic: %f\n", uMosaic);
-            }
-            break;
-        case 'I':
-            if (uMosaic <= 0.1) {
-                uMosaic += 0.001;
-                printf("uMosaic: %f\n", uMosaic);
+        case 'S':
+            if (uNoiseAmp <= 0.95) {
+                uNoiseAmp += 0.05;
+				printf("uNoiseAmp is %f \n", uNoiseAmp);
             }
             break;
 		
@@ -1025,12 +1027,11 @@ Reset( )
 	NowColor = YELLOW;
 	NowProjection = PERSP;
 	Xrot = Yrot = 0.;
-	uSc = 0.5f;				//project5
-    uTc = 0.5f;
-    uRad = 0.0f;
-    uMag = 1.2f;
-    uWhirl = 0.01f;
-    uMosaic = 0.008f;
+	uTol = 0.05f;			//project6
+    uNoiseFreq = 0.05f;
+    uNoiseAmp = 0.05f;
+    uSquirmFreq = 1.f;
+    uSquirmAmp = 1.f;
 }
 
 
