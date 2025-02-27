@@ -183,7 +183,6 @@ int		Xmouse, Ymouse;			// mouse values
 float	Xrot, Yrot;				// rotation angles in degrees
 
 //project6
-float 	uAd, uBd, uTol;
 float 	uNoiseAmp, uNoiseFreq;
 float 	uSquirmAmp, uSquirmFreq;
 
@@ -643,6 +642,7 @@ InitMenus( )
 	glutAttachMenu( GLUT_RIGHT_BUTTON );
 }
 
+//project6
 unsigned char* ReadTexture3D(char* filename, int* width, int* height, int* depth) 
 {
     FILE* fp = fopen(filename, "rb");
@@ -804,7 +804,7 @@ InitLists( )
 	SnakeList = glGenLists( 1 );
     glNewList( SnakeList, GL_COMPILE );
         glPushMatrix();
-            glScalef(0.2f, 0.2f, 0.2f);
+            glScalef(0.3f, 0.3f, 0.3f);
             LoadObjFile((char*)"snakeH.obj");
         glPopMatrix();
     glEndList( );
@@ -1027,8 +1027,7 @@ Reset( )
 	NowColor = YELLOW;
 	NowProjection = PERSP;
 	Xrot = Yrot = 0.;
-	uTol = 0.05f;			//project6
-    uNoiseFreq = 0.05f;
+    uNoiseFreq = 0.05f;   	//project6
     uNoiseAmp = 0.05f;
     uSquirmFreq = 1.f;
     uSquirmAmp = 1.f;

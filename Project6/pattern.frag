@@ -8,14 +8,13 @@ varying vec3 vL;
 varying vec3 vE;
 varying vec3 vMC;
 
-const vec3 DARK_BROWN  = vec3(0.2, 0.15, 0.1);
-const vec3 LIGHT_BROWN = vec3(0.7, 0.55, 0.3);
-const vec3 BEIGE       = vec3(0.9, 0.8, 0.6);
+const vec3 BLUE  = vec3(0., 0., 2.);
+const vec3 GREEN = vec3(0., 2., 0.);
+const vec3 RED   = vec3(2., 0., 0.);
 const vec3 SPECULAR_COLOR = vec3(1.0, 1.0, 1.0);
 
 // Function to generate a scale-like pattern using Voronoi-style noise
 float scalePattern(vec2 uv) {
-    vec2 cell = floor(uv * 10.0);
     vec2 f = fract(uv * 10.0);
 
     float d1 = length(f - vec2(0.3, 0.3));
@@ -28,13 +27,13 @@ float scalePattern(vec2 uv) {
 // Function to generate snake skin color pattern
 vec3 snakeTexture(vec3 pos) {
     float bands = mod(pos.z * 3.0, 2.0);
-    vec3 baseColor = mix(DARK_BROWN, LIGHT_BROWN, step(0.5, bands));
+    vec3 baseColor = mix(BLUE, GREEN, step(0.5, bands));
 
     // Sample noise texture for randomness
     float noise = texture3D(uNoiseTexture, pos * 0.1).r;
 
     float scales = scalePattern(pos.xy + noise * 0.2);
-    baseColor = mix(baseColor, BEIGE, scales * 0.8);
+    baseColor = mix(baseColor, RED, scales * 0.8);
 
     return baseColor;
 }
