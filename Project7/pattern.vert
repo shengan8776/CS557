@@ -4,6 +4,8 @@ varying vec3 vL;    // vector from point to light
 varying vec3 vE;    // vector from point to eye
 varying vec3 vMC;   // model coordinates
 
+varying float   vZ;
+
 uniform float uTwist;
 
 const vec3 LIGHTPOSITION = vec3(5., 5., 0.); //vec3(  8., 1., 3. );
@@ -47,7 +49,7 @@ vec3 RotateZ(vec3 xyz, float radians)
 }
 
 void main()
-{   
+{
     float distanceFromZAxis = length(gl_Vertex.xy);
     float distanceFromYAxis = length(gl_Vertex.xz);
 
@@ -63,6 +65,7 @@ void main()
     vN = normalize(gl_NormalMatrix * gl_Normal);            // normal vector
     vL = LIGHTPOSITION - ECposition.xyz;                    // vector from the point to the light position
     vE = vec3(0., 0., 0.) - ECposition.xyz;                 // vector from the point to the eye position
+    vZ = -ECposition.z;
 
     gl_Position = gl_ModelViewProjectionMatrix * vec4(vert, 1.0);
 }

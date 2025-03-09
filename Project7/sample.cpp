@@ -184,6 +184,8 @@ float	Xrot, Yrot;				// rotation angles in degrees
 
 //project7
 int 	DuckList;
+bool 	uUseChromaDepth;
+float   uRedDepth, uBlueDepth;
 
 
 // function prototypes:
@@ -327,6 +329,7 @@ Animate( )
 {
 	// put animation stuff in here -- change some global variables for Display( ) to find:
 
+	//project7
 	int ms = glutGet(GLUT_ELAPSED_TIME);
 	ms %= MS_PER_CYCLE;							// makes the value of ms between 0 and MS_PER_CYCLE-1
 	Time = (float)ms / (float)MS_PER_CYCLE;		// makes the value of Time between 0. and slightly less than 1.
@@ -418,6 +421,9 @@ Display( )
 	// set the uniform variables that will change over time:
 	float twist = sin(Time / 0.1) * 0.05;
 	Pattern.SetUniformVariable( (char *)"uTwist" , twist);
+	Pattern.SetUniformVariable( (char *)"uRedDepth" , uRedDepth);
+	Pattern.SetUniformVariable( (char *)"uBlueDepth" , uBlueDepth);
+	Pattern.SetUniformVariable( (char *)"uUseChromaDepth" , uUseChromaDepth);
     glCallList( DuckList );
     Pattern.UnUse( );       // Pattern.Use(0);  also works
 
@@ -744,7 +750,7 @@ InitLists( )
 
 	glutSetWindow( MainWindow );
 
-	//project7 project6
+	//project7
 	DuckList = glGenLists( 1 );
     glNewList( DuckList, GL_COMPILE );
         glPushMatrix();
@@ -792,6 +798,36 @@ Keyboard( unsigned char c, int x, int y )
 		case 'P':
 			NowProjection = PERSP;
 			break;
+		//project7
+		case 'c':
+		case 'C':
+			uUseChromaDepth = !uUseChromaDepth;
+			break;
+
+		case 'r':
+            if (uRedDepth >= 0.005) {
+                uRedDepth -= 0.05;
+				printf("uRedDepth is %f \n", uRedDepth);
+            }
+            break;
+        case 'R':
+            if (uRedDepth <= 55.0) {
+                uRedDepth += 0.05;
+				printf("uRedDepth is %f \n", uRedDepth);
+            }
+            break;
+		case 'b':
+            if (uBlueDepth >= 0.005) {
+                uBlueDepth -= 0.05;
+				printf("uBlueDepth is %f \n", uBlueDepth);
+            }
+            break;
+        case 'B':
+            if (uBlueDepth <= 55.0) {
+                uBlueDepth += 0.05;
+				printf("uBlueDepth is %f \n", uBlueDepth);
+            }
+            break;
 		
 		case 'q':
 		case 'Q':
@@ -919,6 +955,9 @@ Reset( )
 	NowColor = YELLOW;
 	NowProjection = PERSP;
 	Xrot = Yrot = 0.;
+	uUseChromaDepth = false;	//project7
+	uRedDepth = 2.15;
+	uBlueDepth = 3.2;
 }
 
 
