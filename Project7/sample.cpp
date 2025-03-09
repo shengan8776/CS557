@@ -778,6 +778,7 @@ InitGraphics( )
 	else
 		fprintf( stderr, "Pattern shader created!\n" );
 
+	//project7 per-fragment lighting
 	Pattern.Use( );
 	Pattern.SetUniformVariable( (char *)"uKa", 0.1f );
 	Pattern.SetUniformVariable( (char *)"uKd", 0.5f );
@@ -800,7 +801,7 @@ InitLists( )
 
 	glutSetWindow( MainWindow );
 
-	//project6
+	//project7 project6
 	DuckList = glGenLists( 1 );
     glNewList( DuckList, GL_COMPILE );
         glPushMatrix();

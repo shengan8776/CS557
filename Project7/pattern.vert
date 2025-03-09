@@ -1,8 +1,11 @@
-varying vec2 vST;
-varying vec3 vN;
-varying vec3 vL;
-varying vec3 vE;
-varying vec3 vMC;
+varying vec2 vST;   // (s,t) texture coordinates
+varying vec3 vN;    // normal vector
+varying vec3 vL;    // vector from point to light
+varying vec3 vE;    // vector from point to eye
+varying vec3 vMC;   // model coordinates
+
+//project7
+varying float vX, vY;
 
 uniform float uTime;
 uniform float uSquirmFreq, uSquirmAmp;
@@ -24,8 +27,13 @@ void main()
 
     // Apply the wave movement with some noise to Z
     vec3 vert = gl_Vertex.xyz;
-    vert.z += n + (uSquirmAmp * sin(TWOPI * uSquirmFreq * uTime + (TWOPI * vert.x) / LENGTH));
+    //vert.z += n + (uSquirmAmp * sin(TWOPI * uSquirmFreq * uTime + (TWOPI * vert.x) / LENGTH));
 
+    vec3 MCposition = gl_Vertex.xyz; 
+    vX = MCposition.x;
+    vY = MCposition.y;
+
+    //per-fragment lighting
     vST = gl_MultiTexCoord0.st;
     vMC = gl_Vertex.xyz;
     vec4 ECposition = gl_ModelViewMatrix * vec4(vert, 1.0); // eye coordinate position
