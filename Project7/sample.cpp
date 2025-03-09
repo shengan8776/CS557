@@ -182,10 +182,7 @@ float	Time;					// used for animation, this has a value between 0. and 1.
 int		Xmouse, Ymouse;			// mouse values
 float	Xrot, Yrot;				// rotation angles in degrees
 
-//project7 project6
-float 	uNoiseAmp, uNoiseFreq;
-float 	uSquirmAmp, uSquirmFreq;
-
+//project7
 int 	DuckList;
 
 
@@ -275,7 +272,6 @@ MulArray3(float factor, float a, float b, float c )
 
 float NowS0, NowT0, NowD;
 GLSLProgram Pattern;
-GLuint  NoiseTexture;
 
 // main program:
 
@@ -415,10 +411,6 @@ Display( )
 	glEnable( GL_NORMALIZE );
 
 	// draw the box object by calling up its display list:		
-	//project6
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_3D, NoiseTexture);
-
 	
 	//project7
     Pattern.Use( );
@@ -426,9 +418,7 @@ Display( )
 	// set the uniform variables that will change over time:
 	float twist = sin(Time / 0.1) * 0.05;
 	Pattern.SetUniformVariable( (char *)"uTwist" , twist);
-
     glCallList( DuckList );
-
     Pattern.UnUse( );       // Pattern.Use(0);  also works
 
 
@@ -634,28 +624,6 @@ InitMenus( )
 	glutAttachMenu( GLUT_RIGHT_BUTTON );
 }
 
-//project6
-unsigned char* ReadTexture3D(char* filename, int* width, int* height, int* depth) 
-{
-    FILE* fp = fopen(filename, "rb");
-    if (fp == NULL) { return NULL; }
-
-    int nums, numt, nump;
-    fread(&nums, 4, 1, fp);
-    fread(&numt, 4, 1, fp);
-    fread(&nump, 4, 1, fp);
-    fprintf(stderr, "Texture size = %d x %d x %d\n", nums, numt, nump);
-
-    *width = nums;
-    *height = numt;
-    *depth = nump;
-
-    unsigned char * texture = new unsigned char[ 4 * nums * numt * nump ];
-    fread(texture, 4 * nums * numt * nump, 1, fp);
-    fclose(fp);
-    return texture;
-}
-
 // initialize the glut and OpenGL libraries:
 //	also setup callback functions
 
@@ -733,13 +701,6 @@ InitGraphics( )
 
 	glutIdleFunc( Animate );
 
-	glGenTextures(1, &NoiseTexture);
-    int nums, numt, nump;
-    unsigned char* texture = ReadTexture3D("noise3d.064.tex", &nums, &numt, &nump);
-    if (texture == NULL) {
-        fprintf(stderr, "Couldn't load noise texture");
-    }
-
 	// init the glew package (a window must be open to do this):
 
 #ifdef WIN32
@@ -752,16 +713,6 @@ InitGraphics( )
 		fprintf( stderr, "GLEW initialized OK\n" );
 	fprintf( stderr, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 #endif
-
-	//project6
-    glBindTexture(GL_TEXTURE_3D, NoiseTexture);
-    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, nums, numt, nump, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, texture);
 
 	Pattern.Init( );
 	bool valid = Pattern.Create( (char *)"pattern.vert", (char *)"pattern.frag" );
@@ -841,58 +792,6 @@ Keyboard( unsigned char c, int x, int y )
 		case 'P':
 			NowProjection = PERSP;
 			break;
-
-		//project6
-		case 'g':
-            if (uSquirmFreq >= 0.05) {
-                uSquirmFreq -= 0.01;
-				printf("uSquirmFreq is %f \n", uSquirmFreq);
-            }
-            break;
-        case 'G':
-            if (uSquirmFreq <= 2.95) {
-                uSquirmFreq += 0.01;
-				printf("uSquirmFreq is %f \n", uSquirmFreq);
-            }
-            break;
-
-        case 'l':
-            if (uSquirmAmp >= 0.05) {
-                uSquirmAmp -= 0.05;
-				printf("uSquirmAmp is %f \n", uSquirmAmp);
-            }
-            break;
-        case 'L':
-            if (uSquirmAmp <= 2.95) {
-                uSquirmAmp += 0.05;
-				printf("uSquirmAmp is %f \n", uSquirmAmp);
-            }
-            break;
-		case 'r':
-            if (uNoiseFreq >= 0.05) {
-                uNoiseFreq -= 0.01;
-				printf("uNoiseFreq is %f \n", uNoiseFreq);
-            }
-            break;
-        case 'R':
-            if (uNoiseFreq <= 1.95) {
-                uNoiseFreq += 0.01;
-				printf("uNoiseFreq is %f \n", uNoiseFreq);
-            }
-            break;
-
-        case 's':
-            if (uNoiseAmp >= 0.05) {
-                uNoiseAmp -= 0.05;
-				printf("uNoiseAmp is %f \n", uNoiseAmp);
-            }
-            break;
-        case 'S':
-            if (uNoiseAmp <= 0.95) {
-                uNoiseAmp += 0.05;
-				printf("uNoiseAmp is %f \n", uNoiseAmp);
-            }
-            break;
 		
 		case 'q':
 		case 'Q':
@@ -1020,10 +919,6 @@ Reset( )
 	NowColor = YELLOW;
 	NowProjection = PERSP;
 	Xrot = Yrot = 0.;
-    uNoiseFreq = 0.05f;   	//project6
-    uNoiseAmp = 0.05f;
-    uSquirmFreq = 1.f;
-    uSquirmAmp = 1.f;
 }
 
 
