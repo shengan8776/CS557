@@ -9,17 +9,17 @@ varying vec3 vMC;
 
 const vec3 YELLOW   = vec3(255., 255., 0.);
 const vec3 DARKGRAY = vec3(0.7, 0.7, 0.7);
-const vec3 OBJECTCOLOR = YELLOW;
-const vec3 HATCHINGCOLER = DARKGRAY;
+const vec3 OBJECTCOLOR      = YELLOW;
+const vec3 HATCHINGCOLER    = DARKGRAY;
 const vec3 SPECULAR_COLOR = vec3(1.0, 1.0, 1.0);
 
 const float uA = 50.0;
 const float uP = 0.4;
-const float uTol = 0.02;
+const float uTol = 0.03;
 
 float SmoothPulse(float left, float right, float value, float tol)
 {
-	return smoothstep( left-tol, left+tol, value) - smoothstep(right-tol, right+tol, value);
+	return smoothstep(left-tol, left+tol, value) - smoothstep(right-tol, right+tol, value);
 }
 
 vec3 hatchingTexture(vec2 st) {

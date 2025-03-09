@@ -265,7 +265,7 @@ MulArray3(float factor, float a, float b, float c )
 
 //#include "setmaterial.cpp"
 //#include "setlight.cpp"
-#include "osusphere.cpp"
+//#include "osusphere.cpp"
 //#include "osucone.cpp"
 //#include "osutorus.cpp"
 //#include "bmptotexture.cpp"
@@ -420,20 +420,12 @@ Display( )
     glBindTexture(GL_TEXTURE_3D, NoiseTexture);
 
 	
-	//project6
+	//project7
     Pattern.Use( );
 
 	// set the uniform variables that will change over time:
-
-    Pattern.SetUniformVariable( (char *)"uNoiseFreq" , uNoiseFreq  );
-    Pattern.SetUniformVariable( (char *)"uNoiseAmp" , uNoiseAmp  );
-
-    Pattern.SetUniformVariable( (char *)"uSquirmFreq" , uSquirmFreq  );
-    Pattern.SetUniformVariable( (char *)"uSquirmAmp" , uSquirmAmp  );
-
-    Pattern.SetUniformVariable( (char *)"uTime" ,  Time);
-
-    Pattern.SetUniformVariable( (char *)"uNoiseTexture" , 3 );
+	float twist = sin(Time / 0.1) * 0.05;
+	Pattern.SetUniformVariable( (char *)"uTwist" , twist);
 
     glCallList( DuckList );
 
@@ -783,7 +775,7 @@ InitGraphics( )
 	Pattern.SetUniformVariable( (char *)"uKa", 0.1f );
 	Pattern.SetUniformVariable( (char *)"uKd", 0.5f );
 	Pattern.SetUniformVariable( (char *)"uKs", 0.4f );
-	Pattern.SetUniformVariable( (char *)"uShininess", 12.f );
+	Pattern.SetUniformVariable( (char *)"uShininess", 6.f );
 	Pattern.UnUse( );
 }
 

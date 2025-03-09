@@ -4,34 +4,57 @@ varying vec3 vL;    // vector from point to light
 varying vec3 vE;    // vector from point to eye
 varying vec3 vMC;   // model coordinates
 
-//project7
-varying float vX, vY;
+uniform float uTwist;
 
-uniform float uTime;
-uniform float uSquirmFreq, uSquirmAmp;
-
-uniform sampler3D uNoiseTexture;
-uniform float uNoiseFreq, uNoiseAmp;
-
-const vec3 LIGHTPOSITION = vec3(5., 5., 0.);
-
+const vec3 LIGHTPOSITION = vec3(5., 5., 0.); //vec3(  8., 1., 3. );
 const float PI = 3.14159265;
 const float TWOPI = 2.0 * PI;
-const float LENGTH = 5.0;   // Scale of the wave
+
+vec3 RotateX(vec3 xyz, float radians)
+{
+	float c = cos(radians);
+	float s = sin(radians);
+	vec3 newxyz = xyz;
+	newxyz.yz = vec2(
+		dot( xyz.yz, vec2( c,-s) ),
+		dot( xyz.yz, vec2( s, c) )
+	);
+	return newxyz;
+}
+
+vec3 RotateY(vec3 xyz, float radians)
+{
+	float c = cos(radians);
+	float s = sin(radians);
+	vec3 newxyz = xyz;
+	newxyz.xz =vec2(
+		dot( xyz.xz, vec2( c,s) ),
+		dot( xyz.xz, vec2(-s,c) )
+	);
+	return newxyz;
+}
+
+vec3 RotateZ(vec3 xyz, float radians)
+{
+	float c = cos(radians);
+	float s = sin(radians);
+	vec3 newxyz = xyz;
+	newxyz.xy = vec2(
+		dot( xyz.xy, vec2( c,-s) ),
+		dot( xyz.xy, vec2( s, c) )
+	);
+	return newxyz;
+}
 
 void main()
-{
-    vec4 nv = texture3D(uNoiseTexture, uNoiseFreq * vec3(vST, 0.));
-    float n = nv.r + nv.g + nv.b + nv.a;
-    n *= uNoiseAmp;
+{   
+    float distanceFromZAxis = length(gl_Vertex.xy);
+    float distanceFromYAxis = length(gl_Vertex.xz);
 
-    // Apply the wave movement with some noise to Z
-    vec3 vert = gl_Vertex.xyz;
-    //vert.z += n + (uSquirmAmp * sin(TWOPI * uSquirmFreq * uTime + (TWOPI * vert.x) / LENGTH));
+    float direction = sign(gl_Vertex.z) * distanceFromYAxis;    //simulate two-hand twisting
+    float radians = TWOPI * uTwist * distanceFromZAxis * direction;
 
-    vec3 MCposition = gl_Vertex.xyz; 
-    vX = MCposition.x;
-    vY = MCposition.y;
+    vec3 vert = RotateZ(gl_Vertex.xyz, radians);
 
     //per-fragment lighting
     vST = gl_MultiTexCoord0.st;
