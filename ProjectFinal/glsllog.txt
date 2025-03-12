@@ -1,3 +1,6 @@
 
-ERROR: 0:93: Condition must be of type bool
+ERROR: 0:11: Regular non-array variable 'uKa' may not be redeclared
+ERROR: 0:11: Regular non-array variable 'uKd' may not be redeclared
+ERROR: 0:11: Regular non-array variable 'uKs' may not be redeclared
+ERROR: 0:14: Regular non-array variable 'uShininess' may not be redeclared
 

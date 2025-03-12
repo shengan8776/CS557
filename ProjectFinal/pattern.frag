@@ -1,6 +1,5 @@
-uniform float uKa, uKd, uKs;
-uniform float uShininess;
-uniform float uRedDepth, uBlueDepth;
+//uniform float uKa, uKd, uKs;
+//uniform float uShininess;
 
 varying vec2 vST;
 varying vec3 vN;
@@ -8,7 +7,19 @@ varying vec3 vL;
 varying vec3 vE;
 varying vec3 vMC;
 
-varying float   vZ;
+//projectf
+uniform float uKa, uKd, uKs;
+//uniform vec4 uColor;
+//const vec4 uColor = { 1., 1., 100., 1. };
+uniform float uShininess;
+uniform sampler3D Noise3;
+uniform float uNoiseAmp;
+uniform float uNoiseFreq;
+//const vec4 WHITE = { 1., 1., .8, 1. };
+
+const vec3 uuColor = vec3(1., 1., 100.);
+const vec3 uuWHITE = vec3(1., 1., .8);
+
 
 const vec3 YELLOW   = vec3(255., 255., 0.);
 const vec3 DARKGRAY = vec3(0.7, 0.7, 0.7);
@@ -19,83 +30,71 @@ const vec3 SPECULAR_COLOR = vec3(1.0, 1.0, 1.0);
 const float uA = 50.0;
 const float uP = 0.4;
 const float uTol = 0.03;
-const bool  uUseChromaDepth = true;
-//uniform bool  uUseChromaDepth;
 
-float SmoothPulse(float left, float right, float value, float tol)
+//projectf
+vec3 RotateNormal( float angx, float angy, vec3 n )
 {
-	return smoothstep(left-tol, left+tol, value) - smoothstep(right-tol, right+tol, value);
+    float cx = cos( angx );
+    float sx = sin( angx );
+    float cy = cos( angy );
+    float sy = sin( angy );
+    // rotate about x:
+    float yp = n.y*cx - n.z*sx; // y'
+    n.z = n.y*sx + n.z*cx; // z'
+    n.y = yp;
+    // n.x = n.x;
+    // rotate about y:
+    float xp = n.x*cy + n.z*sy; // x'
+    n.z = -n.x*sy + n.z*cy; // z'
+    n.x = xp;
+    // n.y = n.y;
+    return normalize( n );
 }
 
-vec3 hatchingTexture(vec2 st) {
-    //int numins = int( st.s / uA );
-	//float Sc = (float(numins) * uA) + uA / 2.;
-
-    float r = sqrt( st.s * st.s + st.t * st.t );
-    //float rfrac = fract( uA * r );              //rings
-    float rfrac = fract( uA * st.s );             //stripes
-    float tp = smoothstep( 0.5-uP-uTol, 0.5-uP+uTol, rfrac ) -
-                smoothstep( 0.5+uP-uTol, 0.5+uP+uTol, rfrac ); 
-
-	vec3 myColor = mix( HATCHINGCOLER, OBJECTCOLOR, tp );
-
-    return myColor;
-}
-
-vec3 Rainbow(float t)
-{
-        t = clamp( t, 0., 1. );         // 0.00 is red, 0.33 is green, 0.67 is blue
-
-        float r = 1.;
-        float g = 0.0;
-        float b = 1.  -  6. * ( t - (5./6.) );
-
-        if( t <= (5./6.) )
-        {
-                r = 6. * ( t - (4./6.) );
-                g = 0.;
-                b = 1.;
-        }
-
-        if( t <= (4./6.) )
-        {
-                r = 0.;
-                g = 1.  -  6. * ( t - (3./6.) );
-                b = 1.;
-        }
-
-        if( t <= (3./6.) )
-        {
-                r = 0.;
-                g = 1.;
-                b = 6. * ( t - (2./6.) );
-        }
-
-        if( t <= (2./6.) )
-        {
-                r = 1.  -  6. * ( t - (1./6.) );
-                g = 1.;
-                b = 0.;
-        }
-
-        if( t <= (1./6.) )
-        {
-                r = 1.;
-                g = 6. * t;
-        }
-
-        return vec3( r, g, b );
-}
 
 void main() {
-    vec3 myColor = hatchingTexture(vST);
+    vec4 uColor = vec4(uuColor, 1.);
+    vec4 WHITE = vec4(uuWHITE, 1.);
 
-    if( uUseChromaDepth )
-    {
-        float t = (2./3.) * ( abs(vZ) - uRedDepth ) / ( uBlueDepth - uRedDepth );
-        t = clamp( t, 0., 2./3. );
-        myColor = Rainbow( t );
+    vec4 nvx = texture3D( Noise3, uNoiseFreq*vMC );
+    vec4 nvy = texture3D( Noise3, uNoiseFreq*vec3(vMC.xy,vMC.z+0.5) );
+
+    float angx = nvx.r + nvx.g + nvx.b + nvx.a;     // 1. -> 3.
+    angx = angx - 2.;  
+    // -1. -> 1.
+    angx *= uNoiseAmp;
+    
+    
+    float angy = nvy.r + nvy.g + nvy.b + nvy.a;     // 1. -> 3. 
+    angy = angy - 2.;
+    // -1. -> 1.
+    angy *= uNoiseAmp;
+
+    //projectf //vNs, vLs, vEs
+    vec3 normal = normalize( vN );
+    vec3 light = normalize( vL );
+    vec3 eye = normalize( vE );
+
+    normal = RotateNormal( angx, angy, normal );
+
+    vec4 ambient = uKa * uColor;
+
+    float d = max( dot(normal,light), 0. );
+    d = abs( dot(normal,light));
+    vec4 diffuse = uKd * d * uColor;
+
+    float s = 0.;
+    if( dot(normal,light) > 0. ) {          // only do specular if the light can see the point
+        vec3 ref = normalize( 2. * normal * dot(normal,light) - light );
+        s = pow( max( dot(eye,ref),0. ), uShininess );
     }
+    vec4 specular = uKs * s * WHITE;
+    gl_FragColor = vec4( ambient.rgb + diffuse.rgb + specular.rgb, 1. );
+
+
+
+    /* //project7
+    vec3 myColor = hatchingTexture(vST);
 
     vec3 Normal = normalize(vN);
     vec3 Light  = normalize(vL);
@@ -117,4 +116,5 @@ void main() {
 
     vec3 specular = uKs * s * SPECULAR_COLOR;
     gl_FragColor = vec4(ambient + diffuse + specular, 1.0);
+    */
 }

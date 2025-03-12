@@ -184,8 +184,6 @@ float	Xrot, Yrot;				// rotation angles in degrees
 
 //project7
 int 	DuckList;
-bool 	uUseChromaDepth;
-float   uRedDepth, uBlueDepth;
 
 
 // function prototypes:
@@ -274,6 +272,7 @@ MulArray3(float factor, float a, float b, float c )
 
 float NowS0, NowT0, NowD;
 GLSLProgram Pattern;
+GLuint  NoiseTexture; //projectf
 
 // main program:
 
@@ -413,17 +412,49 @@ Display( )
 
 	glEnable( GL_NORMALIZE );
 
-	// draw the box object by calling up its display list:		
+	// draw the box object by calling up its display list:	
+	//projectf
+	glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_3D, NoiseTexture);	
 	
-	//project7
+	//project7 //projectf
     Pattern.Use( );
 
 	// set the uniform variables that will change over time:
-	float twist = sin(Time / 0.1) * 0.05;
-	Pattern.SetUniformVariable( (char *)"uTwist" , twist);
-	Pattern.SetUniformVariable( (char *)"uRedDepth" , uRedDepth);
-	Pattern.SetUniformVariable( (char *)"uBlueDepth" , uBlueDepth);
-	Pattern.SetUniformVariable( (char *)"uUseChromaDepth" , uUseChromaDepth);
+	/*
+	Pattern.SetUniformVariable( (char *)"uTimeScale" , uTimeScale);
+	Pattern.SetUniformVariable( (char *)"uAm0" , uAm0);
+	Pattern.SetUniformVariable( (char *)"uKm0" , uKm0);
+	Pattern.SetUniformVariable( (char *)"uGamma0" , uGamma0);
+	Pattern.SetUniformVariable( (char *)"uAm1" , uAm1);
+	Pattern.SetUniformVariable( (char *)"uKm1" , uKm1);
+	Pattern.SetUniformVariable( (char *)"uPhiM1" , uPhiM1);
+	Pattern.SetUniformVariable( (char *)"uGamma1" , uGamma1);
+
+	Pattern.SetUniformVariable( (char *)"Timer" , Timer);
+	*/
+
+	Pattern.SetUniformVariable( (char *)"uTimeScale" , 60.f);
+	Pattern.SetUniformVariable( (char *)"uAm0" , 0.3f);
+	Pattern.SetUniformVariable( (char *)"uKm0" , 1.f);
+	Pattern.SetUniformVariable( (char *)"uGamma0" , 0.f);
+	Pattern.SetUniformVariable( (char *)"uAm1" , 0.f);
+	Pattern.SetUniformVariable( (char *)"uKm1" , 4.3f);
+	Pattern.SetUniformVariable( (char *)"uPhiM1" , 3.4f);
+	Pattern.SetUniformVariable( (char *)"uGamma1" , 0.4f);
+
+	Pattern.SetUniformVariable( (char *)"Timer" , 60.f);
+
+
+	//project3
+	//Pattern.SetUniformVariable( (char *)"uNoiseAmp" , uNoiseAmp  );
+    //Pattern.SetUniformVariable( (char *)"uNoiseFreq" , uNoiseFreq  );
+	Pattern.SetUniformVariable( (char *)"uNoiseAmp" , 1.5f  );
+    Pattern.SetUniformVariable( (char *)"uNoiseFreq" , 1.05f  );
+	//uNoiseAmp = 1.5f;
+    //uNoiseFreq = 1.05f;
+
+	
     glCallList( DuckList );
     Pattern.UnUse( );       // Pattern.Use(0);  also works
 
@@ -630,6 +661,27 @@ InitMenus( )
 	glutAttachMenu( GLUT_RIGHT_BUTTON );
 }
 
+//project2 //project3 //projectf
+unsigned char* ReadTexture3D(char* filename, int* width, int* height, int* depth) {
+    FILE* fp = fopen(filename, "rb");
+    if (fp == NULL) { return NULL; }
+
+    int nums, numt, nump;
+    fread(&nums, 4, 1, fp);
+    fread(&numt, 4, 1, fp);
+    fread(&nump, 4, 1, fp);
+    fprintf(stderr, "Texture size = %d x %d x %d\n", nums, numt, nump);
+
+    *width = nums;
+    *height = numt;
+    *depth = nump;
+
+    unsigned char * texture = new unsigned char[ 4 * nums * numt * nump ];
+    fread(texture, 4 * nums * numt * nump, 1, fp);
+    fclose(fp);
+    return texture;
+}
+
 // initialize the glut and OpenGL libraries:
 //	also setup callback functions
 
@@ -707,6 +759,23 @@ InitGraphics( )
 
 	glutIdleFunc( Animate );
 
+	//project3 //projectf
+	glGenTextures(1, &NoiseTexture);
+    int nums, numt, nump;
+    unsigned char* texture = ReadTexture3D("noise3d.064.tex", &nums, &numt, &nump);
+    if (texture == NULL) {
+        fprintf(stderr, "Couldn't load noise texture");
+    }
+
+    glBindTexture(GL_TEXTURE_3D, NoiseTexture);
+    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, nums, numt, nump, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, texture);
+
 	// init the glew package (a window must be open to do this):
 
 #ifdef WIN32
@@ -727,8 +796,16 @@ InitGraphics( )
 	else
 		fprintf( stderr, "Pattern shader created!\n" );
 
-	//project7 per-fragment lighting
+	//project7 per-fragment lighting //projectf
+	// set the uniform variables that will not change:
 	Pattern.Use( );
+	//project3
+	Pattern.SetUniformVariable( (char *)"Noise3" , 3  );
+
+	Pattern.SetUniformVariable( (char *)"uLightY", 1.f );
+    Pattern.SetUniformVariable( (char *)"uLightX", 1.f );
+    Pattern.SetUniformVariable( (char *)"uLightZ", 1.f );
+
 	Pattern.SetUniformVariable( (char *)"uKa", 0.1f );
 	Pattern.SetUniformVariable( (char *)"uKd", 0.5f );
 	Pattern.SetUniformVariable( (char *)"uKs", 0.4f );
@@ -798,36 +875,6 @@ Keyboard( unsigned char c, int x, int y )
 		case 'P':
 			NowProjection = PERSP;
 			break;
-		//project7
-		case 'c':
-		case 'C':
-			uUseChromaDepth = !uUseChromaDepth;
-			break;
-
-		case 'r':
-            if (uRedDepth >= 0.005) {
-                uRedDepth -= 0.05;
-				printf("uRedDepth is %f \n", uRedDepth);
-            }
-            break;
-        case 'R':
-            if (uRedDepth <= 55.0) {
-                uRedDepth += 0.05;
-				printf("uRedDepth is %f \n", uRedDepth);
-            }
-            break;
-		case 'b':
-            if (uBlueDepth >= 0.005) {
-                uBlueDepth -= 0.05;
-				printf("uBlueDepth is %f \n", uBlueDepth);
-            }
-            break;
-        case 'B':
-            if (uBlueDepth <= 55.0) {
-                uBlueDepth += 0.05;
-				printf("uBlueDepth is %f \n", uBlueDepth);
-            }
-            break;
 		
 		case 'q':
 		case 'Q':
@@ -955,9 +1002,6 @@ Reset( )
 	NowColor = YELLOW;
 	NowProjection = PERSP;
 	Xrot = Yrot = 0.;
-	uUseChromaDepth = false;	//project7
-	uRedDepth = 2.15;
-	uBlueDepth = 3.2;
 }
 
 
