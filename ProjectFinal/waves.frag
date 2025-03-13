@@ -17,11 +17,11 @@ uniform float uNoiseAmp;
 uniform float uNoiseFreq;
 //const vec4 WHITE = { 1., 1., .8, 1. };
 
-const vec3 uuColor = vec3(1., 1., 100.);
+const vec3 uuColor = vec3(0.1, 0.1, 1.);
 const vec3 uuWHITE = vec3(1., 1., .8);
 
 
-const vec3 YELLOW   = vec3(255., 255., 0.);
+const vec3 YELLOW   = vec3(1.0, 1.0, 0.0);
 const vec3 DARKGRAY = vec3(0.7, 0.7, 0.7);
 const vec3 OBJECTCOLOR      = YELLOW;
 const vec3 HATCHINGCOLER    = DARKGRAY;
@@ -31,7 +31,7 @@ const float uA = 50.0;
 const float uP = 0.4;
 const float uTol = 0.03;
 
-//projectf
+//projectf //project3
 vec3 RotateNormal( float angx, float angy, vec3 n )
 {
     float cx = cos( angx );

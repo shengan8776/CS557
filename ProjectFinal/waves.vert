@@ -39,6 +39,24 @@ void main()
 	float dydb = 0.;
 	float dzdb = 1.;
 
+	//m = 0
+	float phiM0 = 0.; // m=0 is the phase baseline
+	float wm0 = sqrt( G*uKm0 );
+	float thetam = gl_Vertex.x*uKm0*cos(uGamma0)+ gl_Vertex.z*uKm0*sin(uGamma0) - wm0*Timer*uTimeScale - phiM0;
+	newx -= uAm0*cos(uGamma0)*sin(thetam);
+	newy += uAm0 * cos(thetam);
+	newz -= uAm0*sin(uGamma0)*sin(thetam);
+	float dthetamda = uKm0*cos(uGamma0);
+	float dthetamdb = uKm0*sin(uGamma0);
+	dxda -= uAm0*cos(uGamma0)*cos(thetam)*dthetamda;
+	dyda -= uAm0*sin(thetam)*dthetamda;
+	dzda -= uAm0*sin(uGamma0)*cos(thetam)*dthetamda;
+	dxdb -= uAm0*cos(uGamma0)*cos(thetam)*dthetamdb;
+	dydb -= uAm0*sin(thetam)*dthetamdb;
+	dzdb -= uAm0*sin(uGamma0)*cos(thetam)*dthetamdb;
+
+	//m = 1
+	/*
 	float wm1 = sqrt( G*uKm1 );
 	float thetam = gl_Vertex.x*uKm1*cos(uGamma1)+ gl_Vertex.z*uKm1*sin(uGamma1) - wm1*Timer*uTimeScale - uPhiM1;
 	newx -= uAm1*cos(uGamma1)*sin(thetam);
@@ -52,6 +70,8 @@ void main()
 	dxdb -= uAm1*cos(uGamma1)*cos(thetam)*dthetamdb;
 	dydb -= uAm1*sin(thetam)*dthetamdb;
 	dzdb -= uAm1*sin(uGamma1)*cos(thetam)*dthetamdb;
+	*/
+
 
 	vec3 newVertex = vec3( newx, newy, newz );
 	vMC = newVertex;
