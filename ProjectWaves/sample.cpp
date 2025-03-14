@@ -186,7 +186,7 @@ float	Xrot, Yrot;				// rotation angles in degrees
 float	uA, uP;					//project3
 float 	uNoiseAmp, uNoiseFreq;
 
-int		SheetList;
+int		WavesList;
 
 // a defined value:
 const int MSEC = 10000;         // 10000 milliseconds = 10 seconds
@@ -268,7 +268,7 @@ MulArray3(float factor, float a, float b, float c )
 
 //#include "setmaterial.cpp"
 //#include "setlight.cpp"
-#include "osusphere.cpp"
+#include "osusphere.cpp"		//projectf //projectw
 //#include "osucone.cpp"
 //#include "osutorus.cpp"
 //#include "bmptotexture.cpp"
@@ -277,7 +277,7 @@ MulArray3(float factor, float a, float b, float c )
 #include "glslprogram.cpp"
 
 float NowS0, NowT0, NowD;
-GLSLProgram Pattern;
+GLSLProgram WavesPattern;	//projectf //projectw
 GLuint  NoiseTexture;
 
 
@@ -423,21 +423,34 @@ Display( )
 	glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_3D, NoiseTexture);
 
-	Pattern.Use( );
+	WavesPattern.Use( );
 
 	// set the uniform variables that will change over time:
 
-    Pattern.SetUniformVariable( (char *)"uA" , uP  );
-    Pattern.SetUniformVariable( (char *)"uP" , uA  );
+    WavesPattern.SetUniformVariable( (char *)"uTimeScale" , 60.f);
+	WavesPattern.SetUniformVariable( (char *)"uAm0" , 0.3f);
+	WavesPattern.SetUniformVariable( (char *)"uKm0" , 1.f);
+	WavesPattern.SetUniformVariable( (char *)"uGamma0" , 0.f);
+	WavesPattern.SetUniformVariable( (char *)"uAm1" , 0.f);
+	WavesPattern.SetUniformVariable( (char *)"uKm1" , 4.3f);
+	WavesPattern.SetUniformVariable( (char *)"uPhiM1" , 3.4f);
+	WavesPattern.SetUniformVariable( (char *)"uGamma1" , 0.4f);
 
-	Pattern.SetUniformVariable( (char *)"uNoiseAmp" , uNoiseAmp  );		//project3
-    Pattern.SetUniformVariable( (char *)"uNoiseFreq" , uNoiseFreq  );
+	WavesPattern.SetUniformVariable( (char *)"Timer" , 60.f);
 
-    Pattern.SetUniformVariable( (char *)"uNoiseTexture" , 3  );
+	WavesPattern.SetUniformVariable( (char *)"uA" , uP  );
+    WavesPattern.SetUniformVariable( (char *)"uP" , uA  );
 
-    glCallList(SheetList);
 
-	Pattern.UnUse( );       // Pattern.Use(0);  also works
+	//project3
+	//Pattern.SetUniformVariable( (char *)"uNoiseAmp" , uNoiseAmp  );
+    //Pattern.SetUniformVariable( (char *)"uNoiseFreq" , uNoiseFreq  );
+	WavesPattern.SetUniformVariable( (char *)"uNoiseAmp" , 1.5f  );
+    WavesPattern.SetUniformVariable( (char *)"uNoiseFreq" , 1.05f  );
+
+    glCallList(WavesList);
+
+	WavesPattern.UnUse( );       // Pattern.Use(0);  also works
 
 
 	// draw some gratuitous text that just rotates on top of the scene:
@@ -773,8 +786,8 @@ InitGraphics( )
 
 	// all other setups go here, such as GLSLProgram and KeyTime setups:
 
-	Pattern.Init( );
-	bool valid = Pattern.Create( (char *)"pattern.vert", (char *)"pattern.frag" );
+	WavesPattern.Init( );
+	bool valid = WavesPattern.Create( (char *)"pattern.vert", (char *)"pattern.frag" );
 	if( !valid )
 		fprintf( stderr, "Could not create the Pattern shader!\n" );
 	else
@@ -782,16 +795,22 @@ InitGraphics( )
 
 	// set the uniform variables that will not change:
 	
-	Pattern.Use( );
-    Pattern.SetUniformVariable( (char *)"uKa", 0.1f );		//project3
-    Pattern.SetUniformVariable( (char *)"uKd", 0.5f );
-    Pattern.SetUniformVariable( (char *)"uKs", 0.4f );
-    Pattern.SetUniformVariable( (char *)"uShininess", 14.f );
+	WavesPattern.Use( );
+    WavesPattern.SetUniformVariable( (char *)"Noise3" , 3  );
+	WavesPattern.SetUniformVariable( (char *)"uNoiseTexture" , 3  );
 
-    Pattern.SetUniformVariable( (char *)"uLightY", 1.f );
-    Pattern.SetUniformVariable( (char *)"uLightX", 1.f );
-    Pattern.SetUniformVariable( (char *)"uLightZ", 1.f );
-    Pattern.UnUse( );
+	float uColorArray[] = { 1.f, 1.3f, 1.2f, 1.0f};
+	WavesPattern.SetUniformVariable( (char *)"uColor" , uColorArray );
+
+	WavesPattern.SetUniformVariable( (char *)"uLightY", 1.f );
+    WavesPattern.SetUniformVariable( (char *)"uLightX", 1.f );
+    WavesPattern.SetUniformVariable( (char *)"uLightZ", 1.f );
+
+	WavesPattern.SetUniformVariable( (char *)"uKa", 0.1f );
+	WavesPattern.SetUniformVariable( (char *)"uKd", 0.5f );
+	WavesPattern.SetUniformVariable( (char *)"uKs", 0.4f );
+	WavesPattern.SetUniformVariable( (char *)"uShininess", 6.f );
+    WavesPattern.UnUse( );
 }
 
 
@@ -819,8 +838,8 @@ InitLists( )
     int numy = 128;
     int numx = 128;
 
-    SheetList = glGenLists(1);
-    glNewList(SheetList, GL_COMPILE);
+	WavesList = glGenLists(1);
+    glNewList(WavesList, GL_COMPILE);
     for(int iy = 0; iy <= numy; iy++) {
         glBegin(GL_QUAD_STRIP);
         glNormal3f(0., 0., 1.);
