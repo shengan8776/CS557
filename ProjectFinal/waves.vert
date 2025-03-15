@@ -1,10 +1,10 @@
+// out variables to be interpolated in the rasterizer and sent to each fragment shader:
+
 varying vec2 vST;   // (s,t) texture coordinates
 varying vec3 vN;    // normal vector
 varying vec3 vL;    // vector from point to light
 varying vec3 vE;    // vector from point to eye
 varying vec3 vMC;   // model coordinates
-
-
 
 uniform float uTimeScale;
 //uniform float uG;
@@ -22,12 +22,12 @@ uniform float Timer;
 uniform float uLightX, uLightY, uLightZ;
 vec3 eyeLightPosition = vec3( uLightX, uLightY, uLightZ );
 
-
-const vec3 LIGHTPOSITION = vec3(5., 5., 0.); //vec3(  8., 1., 3. );
+//const vec3 LIGHTPOSITION = vec3(5., 5., 0.); //vec3(  8., 1., 3. );
 const float PI = 3.14159265;
 const float G = 1.;
 
-void main()
+void
+main( )
 {
 	float newx = gl_Vertex.x;
 	float newy = 0.;
@@ -40,63 +40,49 @@ void main()
 	float dzdb = 1.;
 
 	//m = 0
-	float phiM0 = 0.; // m=0 is the phase baseline
-	float wm0 = sqrt( G*uKm0 );
-	float thetam = gl_Vertex.x*uKm0*cos(uGamma0)+ gl_Vertex.z*uKm0*sin(uGamma0) - wm0*Timer*uTimeScale - phiM0;
-	newx -= uAm0*cos(uGamma0)*sin(thetam);
-	newy += uAm0 * cos(thetam);
-	newz -= uAm0*sin(uGamma0)*sin(thetam);
-	float dthetamda = uKm0*cos(uGamma0);
-	float dthetamdb = uKm0*sin(uGamma0);
-	dxda -= uAm0*cos(uGamma0)*cos(thetam)*dthetamda;
-	dyda -= uAm0*sin(thetam)*dthetamda;
-	dzda -= uAm0*sin(uGamma0)*cos(thetam)*dthetamda;
-	dxdb -= uAm0*cos(uGamma0)*cos(thetam)*dthetamdb;
-	dydb -= uAm0*sin(thetam)*dthetamdb;
-	dzdb -= uAm0*sin(uGamma0)*cos(thetam)*dthetamdb;
-
+	{
+		float phiM0 = 0.; // m=0 is the phase baseline
+		float wm0 = sqrt( G*uKm0 );
+		float thetam = gl_Vertex.x*uKm0*cos(uGamma0)+ gl_Vertex.z*uKm0*sin(uGamma0) - wm0*Timer*uTimeScale - phiM0;
+		newx -= uAm0*cos(uGamma0)*sin(thetam);
+		newy += uAm0 * cos(thetam);
+		newz -= uAm0*sin(uGamma0)*sin(thetam);
+		float dthetamda = uKm0*cos(uGamma0);
+		float dthetamdb = uKm0*sin(uGamma0);
+		dxda -= uAm0*cos(uGamma0)*cos(thetam)*dthetamda;
+		dyda -= uAm0*sin(thetam)*dthetamda;
+		dzda -= uAm0*sin(uGamma0)*cos(thetam)*dthetamda;
+		dxdb -= uAm0*cos(uGamma0)*cos(thetam)*dthetamdb;
+		dydb -= uAm0*sin(thetam)*dthetamdb;
+		dzdb -= uAm0*sin(uGamma0)*cos(thetam)*dthetamdb;
+	}
+	
 	//m = 1
-	/*
-	float wm1 = sqrt( G*uKm1 );
-	float thetam = gl_Vertex.x*uKm1*cos(uGamma1)+ gl_Vertex.z*uKm1*sin(uGamma1) - wm1*Timer*uTimeScale - uPhiM1;
-	newx -= uAm1*cos(uGamma1)*sin(thetam);
-	newy += uAm1 * cos(thetam);
-	newz -= uAm1*sin(uGamma1)*sin(thetam);
-	float dthetamda = uKm1*cos(uGamma1);
-	float dthetamdb = uKm1*sin(uGamma1);
-	dxda -= uAm1*cos(uGamma1)*cos(thetam)*dthetamda;
-	dyda -= uAm1*sin(thetam)*dthetamda;
-	dzda -= uAm1*sin(uGamma1)*cos(thetam)*dthetamda;
-	dxdb -= uAm1*cos(uGamma1)*cos(thetam)*dthetamdb;
-	dydb -= uAm1*sin(thetam)*dthetamdb;
-	dzdb -= uAm1*sin(uGamma1)*cos(thetam)*dthetamdb;
-	*/
-
+	{
+		float wm1 = sqrt( G*uKm1 );
+		float thetam = gl_Vertex.x*uKm1*cos(uGamma1)+ gl_Vertex.z*uKm1*sin(uGamma1) - wm1*Timer*uTimeScale - uPhiM1;
+		newx -= uAm1*cos(uGamma1)*sin(thetam);
+		newy += uAm1 * cos(thetam);
+		newz -= uAm1*sin(uGamma1)*sin(thetam);
+		float dthetamda = uKm1*cos(uGamma1);
+		float dthetamdb = uKm1*sin(uGamma1);
+		dxda -= uAm1*cos(uGamma1)*cos(thetam)*dthetamda;
+		dyda -= uAm1*sin(thetam)*dthetamda;
+		dzda -= uAm1*sin(uGamma1)*cos(thetam)*dthetamda;
+		dxdb -= uAm1*cos(uGamma1)*cos(thetam)*dthetamdb;
+		dydb -= uAm1*sin(thetam)*dthetamdb;
+		dzdb -= uAm1*sin(uGamma1)*cos(thetam)*dthetamdb;
+	}
 
 	vec3 newVertex = vec3( newx, newy, newz );
-	vMC = newVertex;
 	vec3 ta = vec3( dxda, dyda, dzda );
 	vec3 tb = vec3( dxdb, dydb, dzdb );
 
-	//vNs
-	vN = normalize( gl_NormalMatrix*cross( tb, ta ) );
-	// surface normal vector
+	vST = gl_MultiTexCoord0.st;
+	vMC = newVertex;
 	vec4 ECposition = gl_ModelViewMatrix * vec4( newVertex, 1. );
-
-	//vLS
-	vL = normalize( eyeLightPosition - ECposition.xyz ); // vector from the point to the light position
-	//vEs
-	vE = normalize( vec3( 0., 0., 0. ) - ECposition.xyz ); // vector from the point to the eye position
+	vN = normalize( gl_NormalMatrix * cross( tb, ta ) );	//vNs	// surface normal vector
+	vL = normalize( eyeLightPosition - ECposition.xyz );	//vLS	// vector from the point to the light position
+	vE = normalize( vec3( 0., 0., 0. ) - ECposition.xyz );	//vEs	// vector from the point to the eye position
 	gl_Position = gl_ModelViewProjectionMatrix * vec4( newVertex, 1.);
-
-    //per-fragment lighting
-    vST = gl_MultiTexCoord0.st;
-    //vMC = gl_Vertex.xyz;
-    //vec4 ECposition = gl_ModelViewMatrix * gl_Vertex; // eye coordinate position
-    //vN = normalize(gl_NormalMatrix * gl_Normal);            // normal vector
-    //vL = LIGHTPOSITION - ECposition.xyz;                    // vector from the point to the light position
-    //vE = vec3(0., 0., 0.) - ECposition.xyz;                 // vector from the point to the eye position
-    //vZ = -ECposition.z;
-
-    //gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 }

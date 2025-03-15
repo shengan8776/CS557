@@ -7,7 +7,6 @@ varying vec3 vL;
 varying vec3 vE;
 varying vec3 vMC;
 
-
 const vec3 YELLOW   = vec3(1.0, 1.0, 0.0);
 const vec3 DARKGRAY = vec3(0.7, 0.7, 0.7);
 const vec3 OBJECTCOLOR      = YELLOW;

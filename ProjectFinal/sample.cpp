@@ -184,7 +184,7 @@ float	Xrot, Yrot;				// rotation angles in degrees
 
 //project7
 int 	DuckList;
-int		SheetList;
+int		WavesList;
 
 
 // function prototypes:
@@ -438,46 +438,40 @@ Display( )
 	*/
 
 	WavesPattern.SetUniformVariable( (char *)"uTimeScale" , 60.f);
-	WavesPattern.SetUniformVariable( (char *)"uAm0" , 0.3f);
-	WavesPattern.SetUniformVariable( (char *)"uKm0" , 1.f);
-	WavesPattern.SetUniformVariable( (char *)"uGamma0" , 0.f);
-	WavesPattern.SetUniformVariable( (char *)"uAm1" , 0.f);
-	WavesPattern.SetUniformVariable( (char *)"uKm1" , 4.3f);
+	WavesPattern.SetUniformVariable( (char *)"uAm0" , 0.4f);
+	WavesPattern.SetUniformVariable( (char *)"uKm0" , 0.7f);
+	WavesPattern.SetUniformVariable( (char *)"uGamma0" , 0.3f);
+	WavesPattern.SetUniformVariable( (char *)"uAm1" , 0.3f);
+	WavesPattern.SetUniformVariable( (char *)"uKm1" , 0.4f);
 	WavesPattern.SetUniformVariable( (char *)"uPhiM1" , 3.4f);
 	WavesPattern.SetUniformVariable( (char *)"uGamma1" , 0.4f);
 
-	WavesPattern.SetUniformVariable( (char *)"Timer" , 60.f);
+	WavesPattern.SetUniformVariable( (char *)"Timer" , Time / 2);
 
-
-	//project3
-	//Pattern.SetUniformVariable( (char *)"uNoiseAmp" , uNoiseAmp  );
-    //Pattern.SetUniformVariable( (char *)"uNoiseFreq" , uNoiseFreq  );
-	WavesPattern.SetUniformVariable( (char *)"uNoiseAmp" , 1.5f  );
-    WavesPattern.SetUniformVariable( (char *)"uNoiseFreq" , 1.05f  );
-	//uNoiseAmp = 1.5f;
-    //uNoiseFreq = 1.05f;
-
-	
-	glCallList( SheetList );
+	glCallList( WavesList );
     WavesPattern.UnUse( );       // Pattern.Use(0);  also works
 
 
-	/*
+
 	//project7 //projectf
     DuckPattern.Use( );
 
 	// set the uniform variables that will change over time:
 
-	//project3
-	DuckPattern.SetUniformVariable( (char *)"uNoiseAmp" , 1.5f  );
-    DuckPattern.SetUniformVariable( (char *)"uNoiseFreq" , 1.05f  );
-	//uNoiseAmp = 1.5f;
-    //uNoiseFreq = 1.05f;
+	DuckPattern.SetUniformVariable( (char *)"uTimeScale" , 60.f);
+	DuckPattern.SetUniformVariable( (char *)"uAm0" , 0.4f);
+	DuckPattern.SetUniformVariable( (char *)"uKm0" , 0.7f);
+	DuckPattern.SetUniformVariable( (char *)"uGamma0" , 0.3f);
+	DuckPattern.SetUniformVariable( (char *)"uAm1" , 0.3f);
+	DuckPattern.SetUniformVariable( (char *)"uKm1" , 0.4f);
+	DuckPattern.SetUniformVariable( (char *)"uPhiM1" , 3.4f);
+	DuckPattern.SetUniformVariable( (char *)"uGamma1" , 0.4f);
 
+	DuckPattern.SetUniformVariable( (char *)"Timer" , Time / 2);
 	
     glCallList( DuckList );
     DuckPattern.UnUse( );       // Pattern.Use(0);  also works
-	*/
+
 
 
 	// draw some gratuitous text that just rotates on top of the scene:
@@ -820,8 +814,10 @@ InitGraphics( )
 	//project7 per-fragment lighting //projectf
 	// set the uniform variables that will not change:
 	WavesPattern.Use( );
-	//project3
 	WavesPattern.SetUniformVariable( (char *)"Noise3" , 3  );
+
+	float uColorArray[] = { 1.f, 1.3f, 1.2f, 1.0f };
+	WavesPattern.SetUniformVariable( (char *)"uColor" , uColorArray );
 
 	WavesPattern.SetUniformVariable( (char *)"uLightY", 1.f );
     WavesPattern.SetUniformVariable( (char *)"uLightX", 1.f );
@@ -831,9 +827,11 @@ InitGraphics( )
 	WavesPattern.SetUniformVariable( (char *)"uKd", 0.5f );
 	WavesPattern.SetUniformVariable( (char *)"uKs", 0.4f );
 	WavesPattern.SetUniformVariable( (char *)"uShininess", 6.f );
+	
+	WavesPattern.SetUniformVariable( (char *)"uNoiseAmp" , 1.5f  );
+    WavesPattern.SetUniformVariable( (char *)"uNoiseFreq" , 1.05f  );
 	WavesPattern.UnUse( );
-
-	/*
+	
 	DuckPattern.Init( );
 	bool duckValid = DuckPattern.Create( (char *)"duck.vert", (char *)"duck.frag" );
 	if( !duckValid )
@@ -844,15 +842,18 @@ InitGraphics( )
 	//project7 per-fragment lighting //projectf
 	// set the uniform variables that will not change:
 	DuckPattern.Use( );
-	//project3
 	DuckPattern.SetUniformVariable( (char *)"Noise3" , 3  );
 
 	DuckPattern.SetUniformVariable( (char *)"uKa", 0.1f );
 	DuckPattern.SetUniformVariable( (char *)"uKd", 0.5f );
 	DuckPattern.SetUniformVariable( (char *)"uKs", 0.4f );
 	DuckPattern.SetUniformVariable( (char *)"uShininess", 6.f );
+
+	DuckPattern.SetUniformVariable( (char *)"uLightY", 1.f );
+    DuckPattern.SetUniformVariable( (char *)"uLightX", 1.f );
+    DuckPattern.SetUniformVariable( (char *)"uLightZ", 1.f );
 	DuckPattern.UnUse( );
-	*/
+
 }
 
 
@@ -878,27 +879,27 @@ InitLists( )
         glPopMatrix();
     glEndList( );
 
-	// create the object:		//project3
-    float xmin = -3.f;
-    float xmax =  3.f;
-    float ymin = -0.5f;
-    float ymax =  0.5f;
+	// create the horizontal plane		//projectf
+    float xmin = -4.f;
+    float xmax =  4.f;
+    float zmin = -4.f;			
+    float zmax =  4.f;
     float dx = xmax - xmin;
-    float dy = ymax - ymin;
-    float z = 0.f;
-    int numy = 128;
+    float dz = zmax - zmin;
+    float y = 0.f;
+    int numz = 128;
     int numx = 128;
 
-    SheetList = glGenLists(1);
-    glNewList(SheetList, GL_COMPILE);
-    for(int iy = 0; iy <= numy; iy++) {
+	WavesList = glGenLists(1);
+    glNewList(WavesList, GL_COMPILE);
+    for(int iz = 0; iz <= numz; iz++) {
         glBegin(GL_QUAD_STRIP);
-        glNormal3f(0., 0., 1.);
+        glNormal3f(0., 1., 0.);
         for(int ix = 0; ix <= numx; ix++) {
-            glTexCoord2f( (float)ix/(float)numx, (float)(iy+0)/(float)numy );
-            glVertex3f( xmin + dx*(float)ix/(float)numx, ymin + dy*(float)(iy+0)/(float)numy, z );
-            glTexCoord2f( (float)ix/(float)numx, (float)(iy+1)/(float)numy );
-            glVertex3f( xmin + dx*(float)ix/(float)numx, ymin + dy*(float)(iy+1)/(float)numy, z );
+            glTexCoord2f( (float)ix/(float)numx, (float)(iz+0)/(float)numz );
+            glVertex3f( xmin + dx*(float)ix/(float)numx, y, zmin + dz*(float)(iz+0)/(float)numz );
+            glTexCoord2f( (float)ix/(float)numx, (float)(iz+1)/(float)numz );
+            glVertex3f( xmin + dx*(float)ix/(float)numx, y, zmin + dz*(float)(iz+1)/(float)numz );
         }
         glEnd();
     }
