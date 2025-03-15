@@ -431,12 +431,12 @@ Display( )
 	WavesPattern.SetUniformVariable( (char *)"uAm0" , 0.3f);
 	WavesPattern.SetUniformVariable( (char *)"uKm0" , 1.f);
 	WavesPattern.SetUniformVariable( (char *)"uGamma0" , 0.f);
-	WavesPattern.SetUniformVariable( (char *)"uAm1" , 0.f);
+	WavesPattern.SetUniformVariable( (char *)"uAm1" , 1.f);
 	WavesPattern.SetUniformVariable( (char *)"uKm1" , 4.3f);
 	WavesPattern.SetUniformVariable( (char *)"uPhiM1" , 3.4f);
 	WavesPattern.SetUniformVariable( (char *)"uGamma1" , 0.4f);
 
-	WavesPattern.SetUniformVariable( (char *)"Timer" , 60.f);
+	WavesPattern.SetUniformVariable( (char *)"Timer" , Time);
 
 	WavesPattern.SetUniformVariable( (char *)"uA" , uP  );
     WavesPattern.SetUniformVariable( (char *)"uP" , uA  );
@@ -445,7 +445,7 @@ Display( )
 	//project3
 	//Pattern.SetUniformVariable( (char *)"uNoiseAmp" , uNoiseAmp  );
     //Pattern.SetUniformVariable( (char *)"uNoiseFreq" , uNoiseFreq  );
-	WavesPattern.SetUniformVariable( (char *)"uNoiseAmp" , 1.5f  );
+	WavesPattern.SetUniformVariable( (char *)"uNoiseAmp" , 0.9f  );
     WavesPattern.SetUniformVariable( (char *)"uNoiseFreq" , 1.05f  );
 
     glCallList(WavesList);
@@ -797,19 +797,18 @@ InitGraphics( )
 	
 	WavesPattern.Use( );
     WavesPattern.SetUniformVariable( (char *)"Noise3" , 3  );
-	WavesPattern.SetUniformVariable( (char *)"uNoiseTexture" , 3  );
 
-	float uColorArray[] = { 1.f, 1.3f, 1.2f, 1.0f};
+	float uColorArray[] = { 1.f, 1.3f, 1.2f, 1.0f };
 	WavesPattern.SetUniformVariable( (char *)"uColor" , uColorArray );
 
-	WavesPattern.SetUniformVariable( (char *)"uLightY", 1.f );
-    WavesPattern.SetUniformVariable( (char *)"uLightX", 1.f );
-    WavesPattern.SetUniformVariable( (char *)"uLightZ", 1.f );
+	WavesPattern.SetUniformVariable( (char *)"uLightY", 10.f );
+    WavesPattern.SetUniformVariable( (char *)"uLightX", 10.f );
+    WavesPattern.SetUniformVariable( (char *)"uLightZ", 10.f );
 
 	WavesPattern.SetUniformVariable( (char *)"uKa", 0.1f );
 	WavesPattern.SetUniformVariable( (char *)"uKd", 0.5f );
 	WavesPattern.SetUniformVariable( (char *)"uKs", 0.4f );
-	WavesPattern.SetUniformVariable( (char *)"uShininess", 6.f );
+	WavesPattern.SetUniformVariable( (char *)"uShininess", 14.f );
     WavesPattern.UnUse( );
 }
 
@@ -830,24 +829,24 @@ InitLists( )
 	// create the object:		//project3
     float xmin = -1.f;
     float xmax =  1.f;
-    float ymin = -1.f;
-    float ymax =  1.f;
+    float zmin = -1.f;			
+    float zmax =  1.f;
     float dx = xmax - xmin;
-    float dy = ymax - ymin;
-    float z = 0.f;
-    int numy = 128;
+    float dz = zmax - zmin;
+    float y = 0.f;
+    int numz = 128;
     int numx = 128;
 
 	WavesList = glGenLists(1);
     glNewList(WavesList, GL_COMPILE);
-    for(int iy = 0; iy <= numy; iy++) {
+    for(int iz = 0; iz <= numz; iz++) {
         glBegin(GL_QUAD_STRIP);
-        glNormal3f(0., 0., 1.);
+        glNormal3f(0., 1., 0.);
         for(int ix = 0; ix <= numx; ix++) {
-            glTexCoord2f( (float)ix/(float)numx, (float)(iy+0)/(float)numy );
-            glVertex3f( xmin + dx*(float)ix/(float)numx, ymin + dy*(float)(iy+0)/(float)numy, z );
-            glTexCoord2f( (float)ix/(float)numx, (float)(iy+1)/(float)numy );
-            glVertex3f( xmin + dx*(float)ix/(float)numx, ymin + dy*(float)(iy+1)/(float)numy, z );
+            glTexCoord2f( (float)ix/(float)numx, (float)(iz+0)/(float)numz );
+            glVertex3f( xmin + dx*(float)ix/(float)numx, y, zmin + dz*(float)(iz+0)/(float)numz );
+            glTexCoord2f( (float)ix/(float)numx, (float)(iz+1)/(float)numz );
+            glVertex3f( xmin + dx*(float)ix/(float)numx, y, zmin + dz*(float)(iz+1)/(float)numz );
         }
         glEnd();
     }
