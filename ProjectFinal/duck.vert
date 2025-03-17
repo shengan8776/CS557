@@ -20,7 +20,6 @@ uniform float Timer;
 uniform float uLightX, uLightY, uLightZ;
 vec3 eyeLightPosition = vec3( uLightX, uLightY, uLightZ );
 
-//const vec3 LIGHTPOSITION = vec3(5., 5., 0.); //vec3(  8., 1., 3. );
 const float PI = 3.14159265;
 const float G = 1.;
 

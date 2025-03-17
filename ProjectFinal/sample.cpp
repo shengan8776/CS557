@@ -182,7 +182,7 @@ float	Time;					// used for animation, this has a value between 0. and 1.
 int		Xmouse, Ymouse;			// mouse values
 float	Xrot, Yrot;				// rotation angles in degrees
 
-//project7
+//projectf
 int 	DuckList;
 int		WavesList;
 
@@ -329,7 +329,7 @@ Animate( )
 {
 	// put animation stuff in here -- change some global variables for Display( ) to find:
 
-	//project7
+	//projectf
 	int ms = glutGet(GLUT_ELAPSED_TIME);
 	ms %= MS_PER_CYCLE;							// makes the value of ms between 0 and MS_PER_CYCLE-1
 	Time = (float)ms / (float)MS_PER_CYCLE;		// makes the value of Time between 0. and slightly less than 1.
@@ -388,8 +388,7 @@ Display( )
 
 	// set the eye position, look-at position, and up-vector:
 
-	//gluLookAt( 0.f, 0.f, 3.f,     0.f, 0.f, 0.f,     0.f, 1.f, 0.f );
-	gluLookAt(0.0f, 1.0f, 3.0f,     0.0f, 0.0f, 0.0f,     0.0f, 1.0f, 0.0f);//helped
+	gluLookAt(0.0f, 1.0f, 3.0f,     0.0f, 0.0f, 0.0f,     0.0f, 1.0f, 0.0f);
 	//projectf 
 
 	// rotate the scene:
@@ -416,26 +415,15 @@ Display( )
 	glEnable( GL_NORMALIZE );
 
 	// draw the box object by calling up its display list:	
+
 	//projectf
 	glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_3D, NoiseTexture);	
 	
-	//project7 //projectf
+	//projectf
     WavesPattern.Use( );
 
 	// set the uniform variables that will change over time:
-	/*
-	Pattern.SetUniformVariable( (char *)"uTimeScale" , uTimeScale);
-	Pattern.SetUniformVariable( (char *)"uAm0" , uAm0);
-	Pattern.SetUniformVariable( (char *)"uKm0" , uKm0);
-	Pattern.SetUniformVariable( (char *)"uGamma0" , uGamma0);
-	Pattern.SetUniformVariable( (char *)"uAm1" , uAm1);
-	Pattern.SetUniformVariable( (char *)"uKm1" , uKm1);
-	Pattern.SetUniformVariable( (char *)"uPhiM1" , uPhiM1);
-	Pattern.SetUniformVariable( (char *)"uGamma1" , uGamma1);
-
-	Pattern.SetUniformVariable( (char *)"Timer" , Timer);
-	*/
 
 	WavesPattern.SetUniformVariable( (char *)"uTimeScale" , 60.f);
 	WavesPattern.SetUniformVariable( (char *)"uAm0" , 0.4f);
@@ -451,9 +439,6 @@ Display( )
 	glCallList( WavesList );
     WavesPattern.UnUse( );       // Pattern.Use(0);  also works
 
-
-
-	//project7 //projectf
     DuckPattern.Use( );
 
 	// set the uniform variables that will change over time:
@@ -811,7 +796,7 @@ InitGraphics( )
 	else
 		fprintf( stderr, "waves shader created!\n" );
 
-	//project7 per-fragment lighting //projectf
+	//projectf per-fragment lighting
 	// set the uniform variables that will not change:
 	WavesPattern.Use( );
 	WavesPattern.SetUniformVariable( (char *)"Noise3" , 3  );
@@ -839,7 +824,7 @@ InitGraphics( )
 	else
 		fprintf( stderr, "duck shader created!\n" );
 
-	//project7 per-fragment lighting //projectf
+	//projectf per-fragment lighting
 	// set the uniform variables that will not change:
 	DuckPattern.Use( );
 	DuckPattern.SetUniformVariable( (char *)"Noise3" , 3  );
